@@ -1,5 +1,5 @@
 import tensorflow as tf
-from toyset_feat_config import build_emb_columns
+from utils.census_feat_config import build_census_emb_columns
 
 def dcn_model_fn(features, labels, mode, params):
     def cross_variable_create(column_num):
@@ -23,7 +23,7 @@ def dcn_model_fn(features, labels, mode, params):
         res = res + tf.transpose(b)
         return res
 
-    columns, feat_field_size = build_emb_columns()
+    columns, feat_field_size = build_census_emb_columns()
     input_layer = tf.feature_column.input_layer(features=features, feature_columns=columns)
 
     with tf.name_scope('cross'):

@@ -1,6 +1,6 @@
 import shutil
 import tensorflow as tf
-from toyset_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
+from utils.census_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
 from models.din import din_model_fn
 
 def build_estimator(model_dir, model_type):

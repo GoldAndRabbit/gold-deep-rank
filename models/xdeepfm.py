@@ -1,9 +1,9 @@
 import tensorflow as tf
-from toyset_feat_config import build_emb_columns, build_wide_columns
+from utils.census_feat_config import build_census_emb_columns, build_census_wide_columns
 
 def xdeepfm_model_fn(features, labels, mode, params):
-    emb_feat_columns, emb_field_size = build_emb_columns()
-    wide_feat_columns, wide_field_size = build_wide_columns()
+    emb_feat_columns, emb_field_size = build_census_emb_columns()
+    wide_feat_columns, wide_field_size = build_census_wide_columns()
     emb_input_layer = tf.feature_column.input_layer(features=features, feature_columns=emb_feat_columns)
 
     with tf.name_scope('wide'):

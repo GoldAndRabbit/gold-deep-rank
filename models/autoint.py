@@ -1,10 +1,10 @@
 import tensorflow as tf
 import tensorflow.feature_column as fc
-from toyset_feat_config import build_emb_columns
+from utils.census_feat_config import build_census_emb_columns
 
 
 def autoint_model_fn(features, labels, mode, params):
-    columns, feat_field_size = build_emb_columns()
+    columns, feat_field_size = build_census_emb_columns()
     input_layer = tf.feature_column.input_layer(features=features, feature_columns=columns)
 
     def normalize(inputs, epsilon=1e-8):
