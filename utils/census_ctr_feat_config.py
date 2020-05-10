@@ -80,7 +80,7 @@ def build_census_emb_columns():
     return feature_columns, feat_field_size
 
 
-def official_feature_columns_config_demo():
+def official_census_feature_columns_config_demo():
     # categorical_column
     gender = fc.categorical_column_with_vocabulary_list("gender", ["Female", "Male"])
     education = fc.categorical_column_with_vocabulary_list("education", ["Bachelors", "HS-grad", "11th", "Masters", "9th", "Some-college", "Assoc-acdm", "Assoc-voc", "7th-8th", "Doctorate", "Prof-school", "5th-6th", "10th", "1st-4th", "Preschool", "12th"])

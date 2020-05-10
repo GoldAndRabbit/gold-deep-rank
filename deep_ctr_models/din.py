@@ -35,30 +35,30 @@ def din_model_fn(features, labels, mode, params):
         d_layer_2 = tf.layers.dense(inputs=bn_layer_1, units=16, activation=tf.nn.relu, use_bias=True)
         dnn_output_layer = tf.layers.dense(inputs=d_layer_2, units=8, activation=tf.nn.relu, use_bias=True)
 
-    with tf.name_scope('din_attention_layers'):
-        seq_item_hash = tf.string_to_hash_bucket_fast(features["seq"], 200000)                      # seq item
-        target_item_hash = tf.string_to_hash_bucket_fast(features["item_id"], 200000)               # target item emb
-        item_lookup_mat = tf.get_variable(name='item_lookup_mat', dtype=tf.float32, shape=[200000, 20])
-        seq_item_emb = tf.nn.embedding_lookup(item_lookup_mat, seq_item_hash)
-        target_item_emb = tf.nn.embedding_lookup(item_lookup_mat, target_item_hash)
-        seq_item_att = attention_layer(target_item_emb, seq_item_emb, features["seq"])
-
-        seq_cate_hash = tf.string_to_hash_bucket_fast(features["seq_cate"], 200000)                 # seq cate
-        target_cate_hash = tf.string_to_hash_bucket_fast(features["item_cate"], 200000)             # target cate emb
-        cate_lookup_mat = tf.get_variable(name='cate_lookup_mat', dtype=tf.float32, shape=[200000, 20])
-        seq_cate_emb = tf.nn.embedding_lookup(cate_lookup_mat, seq_cate_hash)
-        target_cate_emb = tf.nn.embedding_lookup(cate_lookup_mat, target_cate_hash)
-        seq_cate_att = attention_layer(target_cate_emb, seq_cate_emb, features["seq_cate"])
+    # with tf.name_scope('din_attention_layers'):
+    #     seq_item_hash = tf.string_to_hash_bucket_fast(features["seq"], 200000)                      # seq item
+    #     target_item_hash = tf.string_to_hash_bucket_fast(features["item_id"], 200000)               # target item emb
+    #     item_lookup_mat = tf.get_variable(name='item_lookup_mat', dtype=tf.float32, shape=[200000, 20])
+    #     seq_item_emb = tf.nn.embedding_lookup(item_lookup_mat, seq_item_hash)
+    #     target_item_emb = tf.nn.embedding_lookup(item_lookup_mat, target_item_hash)
+    #     seq_item_att = attention_layer(target_item_emb, seq_item_emb, features["seq"])
+    #
+    #     seq_cate_hash = tf.string_to_hash_bucket_fast(features["seq_cate"], 200000)                 # seq cate
+    #     target_cate_hash = tf.string_to_hash_bucket_fast(features["item_cate"], 200000)             # target cate emb
+    #     cate_lookup_mat = tf.get_variable(name='cate_lookup_mat', dtype=tf.float32, shape=[200000, 20])
+    #     seq_cate_emb = tf.nn.embedding_lookup(cate_lookup_mat, seq_cate_hash)
+    #     target_cate_emb = tf.nn.embedding_lookup(cate_lookup_mat, target_cate_hash)
+    #     seq_cate_att = attention_layer(target_cate_emb, seq_cate_emb, features["seq_cate"])
 
     with tf.name_scope('concat_layers'):
-        m_layer = tf.concat([dnn_output_layer, seq_item_att, seq_cate_att], axis=1)
+        m_layer = tf.concat([dnn_output_layer], axis=1)
+        # m_layer = tf.concat([dnn_output_layer, seq_item_att, seq_cate_att], axis=1)
         o_layer = tf.layers.dense(inputs=m_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('logit'):
         o_prob = tf.nn.sigmoid(o_layer)
         predictions = tf.cast((o_prob > 0.5), tf.float32)
 
-    labels = tf.cast(labels, tf.float32, name='true_label')
     # define loss
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
     # evaluation

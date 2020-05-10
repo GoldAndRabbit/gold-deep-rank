@@ -6,13 +6,16 @@ from deep_mtl_models.mmoe import mmoe_model_fn
 from utils.census_mtl_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
 
 def build_estimator(model_dir, model_type, paras):
+    MODEL_FN_MAP = {
+        'essm': essm_model_fn,
+        'mmoe': mmoe_model_fn,
+    }
+    assert model_type in MODEL_FN_MAP.keys(), ('no model named : ' + str(model_type))
     run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-    if model_type == 'essm':
-        return tf.estimator.Estimator(model_fn=essm_model_fn,model_dir=model_dir,config=run_config,params=paras)
-    elif model_type == 'mmoe':
-        return tf.estimator.Estimator(model_fn=mmoe_model_fn,model_dir=model_dir,config=run_config,params=paras)
-    else:
-        print('error')
+    return tf.estimator.Estimator(model_fn=MODEL_FN_MAP[model_type],
+                                  model_dir=model_dir,
+                                  config=run_config,
+                                  params=paras)
 
 
 def input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
@@ -80,7 +83,6 @@ def train_mmoe_census_data():
         'epoches_per_eval': 2,
         'train_data': 'toy_data/adult.data',
         'test_data': 'toy_data/adult.test',
-        'train_data_tfrecords_dir': 'toy_data/census_adult.tfrecords',
         'batch_size': 8,
     }
     print('using: ' +  all_paras['model_type'] + ' model...')

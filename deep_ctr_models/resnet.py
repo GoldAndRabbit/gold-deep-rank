@@ -23,7 +23,6 @@ def res_model_fn(features, labels, mode, params):
         o_prob = tf.nn.sigmoid(o_layer)
         predictions = tf.cast((o_prob > 0.5), tf.float32)
 
-    labels = tf.cast(labels, tf.float32, name='true_label')
     # define loss
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
     # evaluation
