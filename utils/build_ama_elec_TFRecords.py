@@ -1,12 +1,11 @@
 import os
-
 import pandas as pd
 import tensorflow as tf
 from tqdm import tqdm
 
 
 # def serialize_ama_ele_example(user_id, item_id, item_cate, label, seq, seq_cate):
-def serialize_ama_ele_example(user_id,item_id,item_cate,label):
+def serialize_ama_ele_example(user_id, item_id, item_cate, label):
 
     def _int64_feature(value):
         if not isinstance(value, list):
@@ -38,6 +37,7 @@ def serialize_ama_ele_example(user_id,item_id,item_cate,label):
 
 
 def build_ama_ele_TFRecords(csv_file_dir, tfrecords_dir):
+
     def _load_data_from_csv(csv_file_dir):
         df_data = pd.read_csv(csv_file_dir)
         df_data = df_data[[
@@ -55,6 +55,7 @@ def build_ama_ele_TFRecords(csv_file_dir, tfrecords_dir):
             example_str = serialize_ama_ele_example(
                 # int
                 row['user_id'], row['item_id'], row['item_cate'], row['label']
+                # str(row['user_id']), str(row['item_id']), str(row['item_cate']), str(row['label'])
                 # int list
                 # [int(x) for x in row['seq'].split(',')],
                 # [int(x) for x in row['seq_cate'].split(',')]
@@ -88,8 +89,8 @@ if __name__ == '__main__':
     test_csv_dir = os.getcwd().replace('utils', '/toy_data/ama_ele_test_pad.csv')
     test_tfrecords_dir = os.getcwd().replace('utils', '/toy_data/ama_ele_test_pad.tfrecords')
 
-    build_ama_ele_TFRecords(csv_file_dir=train_csv_dir, tfrecords_dir=train_tfrecords_dir)
-    build_ama_ele_TFRecords(csv_file_dir=test_csv_dir, tfrecords_dir=test_tfrecords_dir)
+    # build_ama_ele_TFRecords(csv_file_dir=train_csv_dir, tfrecords_dir=train_tfrecords_dir)
+    # build_ama_ele_TFRecords(csv_file_dir=test_csv_dir, tfrecords_dir=test_tfrecords_dir)
 
     dataset = tf.data.TFRecordDataset(train_tfrecords_dir).map(parse_ama_ele_TFRecords_fn, num_parallel_calls=10).prefetch(500000)
     print(dataset)

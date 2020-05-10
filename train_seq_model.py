@@ -48,7 +48,7 @@ def train_ama_ele_from_tfrecords():
         'train_epoches': 4,
         'epoches_per_eval': 2,
         'train_data_tfrecords_dir': 'toy_data/ama_ele_train_pad.tfrecords',
-        'test_data_tfrecords_dir': 'toy_data/ama_ele_test_pad.tfrecords',
+        'test_data_tfrecords_dir':  'toy_data/ama_ele_test_pad.tfrecords',
         'batch_size': 8,
     }
     print('using: ' +  all_paras['model_type'] + ' model...')

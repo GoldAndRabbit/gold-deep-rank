@@ -26,7 +26,6 @@ def serialize_census_example(age, fnlwgt, education_num, capital_gain, capital_l
             value = value.numpy()
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.encode()]))
 
-
     feature = {
         # int feature
         'age'  :            _int64_feature(age),
@@ -105,8 +104,8 @@ if __name__ == '__main__':
     test_csv_dir = os.getcwd().replace('utils', '/toy_data/adult.test')
     test_tfrecords_dir = os.getcwd().replace('utils', '/toy_data/census_test.tfrecords')
 
-    build_census_TFRecords(csv_file_dir=train_csv_dir, tfrecords_dir=train_tfrecords_dir)
-    build_census_TFRecords(csv_file_dir=test_csv_dir, tfrecords_dir=test_tfrecords_dir)
+    # build_census_TFRecords(csv_file_dir=train_csv_dir, tfrecords_dir=train_tfrecords_dir)
+    # build_census_TFRecords(csv_file_dir=test_csv_dir, tfrecords_dir=test_tfrecords_dir)
 
     dataset = tf.data.TFRecordDataset(train_tfrecords_dir).map(parse_census_TFRecords_fn, num_parallel_calls=10).prefetch(500000)
     print(dataset)

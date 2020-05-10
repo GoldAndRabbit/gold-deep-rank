@@ -77,9 +77,7 @@ def input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
         labels = tf.to_float(labels)
         return features, labels
 
-    dataset = tf.data.TFRecordDataset(data_file).map(_parse_census_TFRecords_fn,
-        num_parallel_calls=10)
-
+    dataset = tf.data.TFRecordDataset(data_file).map(_parse_census_TFRecords_fn, num_parallel_calls=10)
     if shuffle:
         dataset = dataset.shuffle(buffer_size=5000)
     dataset = dataset.repeat(num_epochs)
