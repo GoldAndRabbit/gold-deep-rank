@@ -1,12 +1,12 @@
 import shutil
 import tensorflow as tf
-from utils.census_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
-from models.wdl import wdl_model_fn
-from models.dcn import dcn_model_fn
-from models.autoint import autoint_model_fn
-from models.xdeepfm import xdeepfm_model_fn
-from models.deepfm import deepfm_model_fn
-from models.resnet import res_model_fn
+from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
+from deep_ctr_models.wdl import wdl_model_fn
+from deep_ctr_models.dcn import dcn_model_fn
+from deep_ctr_models.autoint import autoint_model_fn
+from deep_ctr_models.xdeepfm import xdeepfm_model_fn
+from deep_ctr_models.deepfm import deepfm_model_fn
+from deep_ctr_models.resnet import res_model_fn
 
 
 def build_estimator(model_dir, model_type, paras):

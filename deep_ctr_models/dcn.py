@@ -1,5 +1,5 @@
 import tensorflow as tf
-from utils.census_feat_config import build_census_emb_columns
+from utils.census_ctr_feat_config import build_census_emb_columns
 
 def dcn_model_fn(features, labels, mode, params):
     def cross_variable_create(column_num):

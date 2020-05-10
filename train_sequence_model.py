@@ -1,7 +1,7 @@
 import shutil
 import tensorflow as tf
-from utils.census_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
-from models.din import din_model_fn
+from utils.census_ctr_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
+from deep_ctr_models.din import din_model_fn
 
 def build_estimator(model_dir, model_type):
     run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))

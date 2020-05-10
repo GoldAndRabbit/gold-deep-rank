@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow.feature_column as fc
-from utils.census_feat_config import build_census_emb_columns
+from utils.census_ctr_feat_config import build_census_emb_columns
 
 
 def autoint_model_fn(features, labels, mode, params):

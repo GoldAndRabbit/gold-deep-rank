@@ -1,5 +1,5 @@
 import tensorflow as tf
-from utils.census_feat_config import build_ama_ele_columns
+from utils.census_ctr_feat_config import build_ama_ele_columns
 
 
 def attention_layer(querys, keys, keys_id):
