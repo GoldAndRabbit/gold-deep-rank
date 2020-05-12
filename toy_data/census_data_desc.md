@@ -6,7 +6,7 @@ Prediction task is to determine whether a person makes over 50K a year.
 
 ## Attribute Information
 | attribute| Category |
-|  ----  | ----  |
+|  ----  | ---- |
 | label| >50K, <=50K.|
 | age  | continuous |
 | fnlwgt  | continuous |
@@ -21,10 +21,9 @@ Prediction task is to determine whether a person makes over 50K a year.
 | marital-status  |  Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse. |
 | workclass  | Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked. |
 | education  | Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool.
- |
 | native-country  | United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.|
 
 
 ## Relevant Papers
-Ron Kohavi, ["Scaling Up the Accuracy of Naive-Bayes Classifiers: a Decision-Tree Hybrid"](http://robotics.stanford.edu/~ronnyk/nbtree.pdf]), Proceedings of the Second International Conference on Knowledge Discovery and Data Mining, 1996
+[1]. Ron Kohavi, ["Scaling Up the Accuracy of Naive-Bayes Classifiers: a Decision-Tree Hybrid"](http://robotics.stanford.edu/~ronnyk/nbtree.pdf]), Proceedings of the Second International Conference on Knowledge Discovery and Data Mining, 1996.
 
