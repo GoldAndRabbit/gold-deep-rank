@@ -1,11 +1,6 @@
 import tensorflow as tf
-import tensorflow.feature_column as fc
-from utils.census_ctr_feat_config import build_census_emb_columns
-
 
 def autoint_model_fn(features, labels, mode, params):
-    columns, feat_field_size = build_census_emb_columns()
-    input_layer = tf.feature_column.input_layer(features=features, feature_columns=columns)
 
     def normalize(inputs, epsilon=1e-8):
         inputs_shape = inputs.get_shape()
@@ -17,6 +12,9 @@ def autoint_model_fn(features, labels, mode, params):
         outputs = gamma * normalized + beta
         return outputs
 
+    columns = params['columns']
+    feat_field_size = params['feat_field_size']
+    input_layer = tf.feature_column.input_layer(features=features,feature_columns=columns)
     total_feat = tf.reshape(input_layer, [-1, feat_field_size, 32])
     att_emb_size = 64
     num_heads = 2
@@ -82,27 +80,27 @@ def autoint_model_fn(features, labels, mode, params):
         o_prob = tf.nn.sigmoid(o_layer)
         predictions = tf.cast((o_prob > 0.5), tf.float32)
 
-    # define loss
-    loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
-    # evaluation
-    accuracy = tf.metrics.accuracy(labels, predictions)
-    auc = tf.metrics.auc(labels, predictions)
-    my_metrics = {
-        'accuracy': tf.metrics.accuracy(labels, predictions),
-        'auc': tf.metrics.auc(labels, predictions)
-    }
-    tf.summary.scalar('accuracy', accuracy[1])
-    tf.summary.scalar('auc', auc[1])
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        predictions = {
+            'probabilities': o_prob,
+            'label': predictions
+        }
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
-    # define train_op
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.0004, beta1=0.9, beta2=0.999)
-    train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
+    loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.0004, beta1=0.9, beta2=0.999)
+        train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
-    elif mode == tf.estimator.ModeKeys.EVAL:
+
+    if mode == tf.estimator.ModeKeys.EVAL:
+        accuracy = tf.metrics.accuracy(labels, predictions)
+        auc = tf.metrics.auc(labels, predictions)
+        my_metrics = {
+            'accuracy': tf.metrics.accuracy(labels, predictions),
+            'auc': tf.metrics.auc(labels,predictions)
+        }
+        tf.summary.scalar('accuracy', accuracy[1])
+        tf.summary.scalar('auc', auc[1])
         return tf.estimator.EstimatorSpec(mode, loss=loss, eval_metric_ops=my_metrics)
-    elif mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
-    else:
-        print('ERROR')

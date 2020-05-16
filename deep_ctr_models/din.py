@@ -59,27 +59,27 @@ def din_model_fn(features, labels, mode, params):
         o_prob = tf.nn.sigmoid(o_layer)
         predictions = tf.cast((o_prob > 0.5), tf.float32)
 
-    # define loss
-    loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
-    # evaluation
-    accuracy = tf.metrics.accuracy(labels, predictions)
-    auc = tf.metrics.auc(labels, predictions)
-    my_metrics = {
-        'accuracy': tf.metrics.accuracy(labels, predictions),
-        'auc': tf.metrics.auc(labels, predictions)
-    }
-    tf.summary.scalar('accuracy', accuracy[1])
-    tf.summary.scalar('auc', auc[1])
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        predictions = {
+            'probabilities': o_prob,
+            'label': predictions
+        }
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
-    # define train_op
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
-    train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
+    loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.0004, beta1=0.9, beta2=0.999)
+        train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
-    elif mode == tf.estimator.ModeKeys.EVAL:
+
+    if mode == tf.estimator.ModeKeys.EVAL:
+        accuracy = tf.metrics.accuracy(labels, predictions)
+        auc = tf.metrics.auc(labels, predictions)
+        my_metrics = {
+            'accuracy': tf.metrics.accuracy(labels, predictions),
+            'auc': tf.metrics.auc(labels,predictions)
+        }
+        tf.summary.scalar('accuracy', accuracy[1])
+        tf.summary.scalar('auc', auc[1])
         return tf.estimator.EstimatorSpec(mode, loss=loss, eval_metric_ops=my_metrics)
-    elif mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
-    else:
-        print('ERROR')

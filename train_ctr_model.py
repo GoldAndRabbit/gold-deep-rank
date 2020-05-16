@@ -1,5 +1,6 @@
 import shutil
 import tensorflow as tf
+from utils.census_ctr_feat_config import build_census_emb_columns, build_census_wide_columns
 from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
 from deep_ctr_models.wdl import wdl_model_fn
 from deep_ctr_models.dcn import dcn_model_fn
@@ -9,28 +10,11 @@ from deep_ctr_models.deepfm import deepfm_model_fn
 from deep_ctr_models.resnet import res_model_fn
 
 
-def build_estimator(ckpt_dir, model_name, paras):
-    MODEL_FN_MAP = {
-        'wdl':          wdl_model_fn,
-        'dcn':          dcn_model_fn,
-        'autoint':      autoint_model_fn,
-        'xdeepfm':      xdeepfm_model_fn,
-        'deepfm':       deepfm_model_fn,
-        'res_model_fn': res_model_fn,
-    }
-    assert model_name in MODEL_FN_MAP.keys(), ('no model named : ' + str(model_name))
-    run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-    return tf.estimator.Estimator(model_fn=MODEL_FN_MAP[model_name],
-                                  model_dir=ckpt_dir,
-                                  config=run_config,
-                                  params=paras)
-
-
 def input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
     assert tf.io.gfile.exists(data_file), ('no file named : ' + str(data_file))
 
     def parse_csv(value):
-        columns = tf.decode_csv(value,record_defaults=CENSUS_COLUMN_DEFAULTS)
+        columns = tf.decode_csv(value, record_defaults=CENSUS_COLUMN_DEFAULTS)
         features = dict(zip(CENSUS_COLUMNS, columns))
         labels = tf.equal(features.pop('income_bracket'), '>50K')
         labels = tf.reshape(labels, [-1])
@@ -49,7 +33,7 @@ def input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
 
 
 def input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
-    assert tf.gfile.Exists(data_file), ('no file named: ' + str(data_file))
+    assert tf.io.gfile.exists(data_file), ('no file named: ' + str(data_file))
 
     def _parse_census_TFRecords_fn(record):
         features = {
@@ -87,27 +71,49 @@ def input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
     return features, labels
 
 
+def build_estimator(ckpt_dir, model_name, params_config):
+    MODEL_FN_MAP = {
+        'wdl':          wdl_model_fn,
+        'dcn':          dcn_model_fn,
+        'autoint':      autoint_model_fn,
+        'xdeepfm':      xdeepfm_model_fn,
+        'deepfm':       deepfm_model_fn,
+        'res_model_fn': res_model_fn,
+    }
+    assert model_name in MODEL_FN_MAP.keys(), ('no model named : ' + str(model_name))
+    run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
+    return tf.estimator.Estimator(model_fn=MODEL_FN_MAP[model_name],
+                                  model_dir=ckpt_dir,
+                                  config=run_config,
+                                  params=params_config)
+
+
 def train_census_data():
-    data_process_config = {
+    columns, feat_field_size = build_census_emb_columns()
+    wide_feat_columns, wide_field_size = build_census_wide_columns()
+    params_config = {
+        # data/ckpt dir config
         'train_data_dir': 'toy_data/adult.data',
         'test_data_dir': 'toy_data/adult.test',
         'ckpt_dir': './ckpt_dir/',
-    }
-    train_prosess_config = {
-        'model_name': 'dcn',
-        'train_epoches': 8,
-        'batch_size': 8,
+        # traning process config
+        'model_name': 'wdl',
+        'train_epoches': 1,
+        'batch_size': 16,
         'epoches_per_eval': 2,
         'learning_rate': 0.01,
         'optimizer': 'adam',
-        'shuffle': True
+        'shuffle': True,
+        'embedding_dim': 8,
+        'deep_layer_nerouns': [256, 128, 64],
+        'columns': columns,
+        'feat_field_size': feat_field_size,
+        'wide_feat_columns': wide_feat_columns,
+        'wide_field_size': wide_field_size
     }
-    params_config = {}
-    params_config.update(data_process_config)
-    params_config.update(train_prosess_config)
-    print('using: ' +  params_config['model_name'] + ' model...')
+    print('this process will train a: ' +  params_config['model_name'] + ' model...')
     shutil.rmtree(params_config['ckpt_dir'], ignore_errors=True)
-    model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], paras=params_config)
+    model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], params_config=params_config)
     model.train(
         input_fn=lambda: input_fn_from_csv_file(
             data_file=params_config['train_data_dir'],
@@ -116,7 +122,19 @@ def train_census_data():
             batch_size=params_config['batch_size']
         )
     )
-    results = model.evaluate(
+
+    # results = model.evaluate(
+    #     input_fn=lambda: input_fn_from_csv_file(
+    #         data_file=params_config['test_data_dir'],
+    #         num_epochs=1,
+    #         shuffle=False,
+    #         batch_size=params_config['batch_size']
+    #     )
+    # )
+    # for key in sorted(results):
+    #     print('%s: %s' % (key, results[key]))
+
+    predictions = model.predict(
         input_fn=lambda: input_fn_from_csv_file(
             data_file=params_config['test_data_dir'],
             num_epochs=1,
@@ -124,31 +142,37 @@ def train_census_data():
             batch_size=params_config['batch_size']
         )
     )
-    for key in sorted(results):
-        print('%s: %s' % (key, results[key]))
+    for x in predictions:
+        print(x['probabilities'][0])
+        print(x['label'][0])
 
 
 def train_census_data_from_tfrecords():
-    data_process_config = {
+    columns, feat_field_size = build_census_emb_columns()
+    wide_feat_columns, wide_field_size = build_census_wide_columns()
+    params_config = {
+        # data/ckpt dir config
         'train_data_tfrecords_dir': 'toy_data/census_adult.tfrecords',
         'test_data_tfrecords_dir': 'toy_data/census_test.tfrecords',
         'ckpt_dir': './ckpt_dir/',
-    }
-    train_prosess_config = {
-        'model_name': 'dcn',
-        'train_epoches': 8,
-        'batch_size': 8,
+        # traning process config
+        'model_name': 'wdl',
+        'train_epoches': 1,
+        'batch_size': 16,
         'epoches_per_eval': 2,
         'learning_rate': 0.01,
         'optimizer': 'adam',
-        'shuffle': True
+        'shuffle': True,
+        'embedding_dim': 8,
+        'deep_layer_nerouns': [256, 128, 64],
+        'columns': columns,
+        'feat_field_size': feat_field_size,
+        'wide_feat_columns': wide_feat_columns,
+        'wide_field_size': wide_field_size
     }
-    params_config = {}
-    params_config.update(data_process_config)
-    params_config.update(train_prosess_config)
-    print('using: ' +  params_config['model_name'] + ' model...')
+    print('this process will train a: ' +  params_config['model_name'] + ' model...')
     shutil.rmtree(params_config['ckpt_dir'], ignore_errors=True)
-    model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], paras=params_config)
+    model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], params_config=params_config)
     model.train(
         input_fn=lambda: input_fn_from_tfrecords(
             data_file=params_config['train_data_tfrecords_dir'],
@@ -157,7 +181,18 @@ def train_census_data_from_tfrecords():
             batch_size=params_config['batch_size']
         )
     )
-    results = model.evaluate(
+    # results = model.evaluate(
+    #     input_fn=lambda: input_fn_from_tfrecords(
+    #         data_file=params_config['test_data_tfrecords_dir'],
+    #         num_epochs=1,
+    #         shuffle=False,
+    #         batch_size=params_config['batch_size']
+    #     )
+    # )
+    # for key in sorted(results):
+    #     print('%s: %s' % (key, results[key]))
+
+    predictions = model.predict(
         input_fn=lambda: input_fn_from_tfrecords(
             data_file=params_config['test_data_tfrecords_dir'],
             num_epochs=1,
@@ -165,8 +200,9 @@ def train_census_data_from_tfrecords():
             batch_size=params_config['batch_size']
         )
     )
-    for key in sorted(results):
-        print('%s: %s' % (key, results[key]))
+    for x in predictions:
+        print(x['probabilities'][0])
+        print(x['label'][0])
 
 
 if __name__ == '__main__':
