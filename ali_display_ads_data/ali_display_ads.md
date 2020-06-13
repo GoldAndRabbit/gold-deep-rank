@@ -2,10 +2,6 @@
 典型科研场景: 根据用户历史购物行为预测用户在接受某个广告的曝光时的点击概率。  
 baseline AUC：0.622  
 
-研究成果  
-[1]. Guorui Zhou, Chengru Song, Xiaoqiang Zhu, et al. Deep Interest Network for Click-Through Rate Prediction.  
-[2]. Gai K, Zhu X, Li H, et al. Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction.
-
 #### raw_sample
 淘宝网随机抽样了114万用户8天内的广告展示/点击日志（2600万条记录）
 1. user_id：脱敏过的用户ID；
