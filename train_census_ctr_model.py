@@ -10,7 +10,7 @@ from deep_ctr_models.deepfm import deepfm_model_fn
 from deep_ctr_models.resnet import res_model_fn
 
 
-def input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
+def census_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
     assert tf.io.gfile.exists(data_file), ('no file named : ' + str(data_file))
 
     def parse_csv(value):
@@ -32,7 +32,7 @@ def input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
     return features, labels
 
 
-def input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
+def census_input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
     assert tf.io.gfile.exists(data_file), ('no file named: ' + str(data_file))
 
     def _parse_census_TFRecords_fn(record):
@@ -115,7 +115,7 @@ def train_census_data():
     shutil.rmtree(params_config['ckpt_dir'], ignore_errors=True)
     model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], params_config=params_config)
     model.train(
-        input_fn=lambda: input_fn_from_csv_file(
+        input_fn=lambda: census_input_fn_from_csv_file(
             data_file=params_config['train_data_dir'],
             num_epochs=params_config['epoches_per_eval'],
             shuffle=True if params_config['shuffle']==True else False,
@@ -123,7 +123,18 @@ def train_census_data():
         )
     )
 
-    # results = model.evaluate(
+    results = model.evaluate(
+        input_fn=lambda: census_input_fn_from_csv_file(
+            data_file=params_config['test_data_dir'],
+            num_epochs=1,
+            shuffle=False,
+            batch_size=params_config['batch_size']
+        )
+    )
+    for key in sorted(results):
+        print('%s: %s' % (key, results[key]))
+
+    # predictions = model.predict(
     #     input_fn=lambda: input_fn_from_csv_file(
     #         data_file=params_config['test_data_dir'],
     #         num_epochs=1,
@@ -131,20 +142,9 @@ def train_census_data():
     #         batch_size=params_config['batch_size']
     #     )
     # )
-    # for key in sorted(results):
-    #     print('%s: %s' % (key, results[key]))
-
-    predictions = model.predict(
-        input_fn=lambda: input_fn_from_csv_file(
-            data_file=params_config['test_data_dir'],
-            num_epochs=1,
-            shuffle=False,
-            batch_size=params_config['batch_size']
-        )
-    )
-    for x in predictions:
-        print(x['probabilities'][0])
-        print(x['label'][0])
+    # for x in predictions:
+    #     print(x['probabilities'][0])
+    #     print(x['label'][0])
 
 
 def train_census_data_from_tfrecords():
@@ -174,14 +174,25 @@ def train_census_data_from_tfrecords():
     shutil.rmtree(params_config['ckpt_dir'], ignore_errors=True)
     model = build_estimator(params_config['ckpt_dir'], params_config['model_name'], params_config=params_config)
     model.train(
-        input_fn=lambda: input_fn_from_tfrecords(
+        input_fn=lambda: census_input_fn_from_tfrecords(
             data_file=params_config['train_data_tfrecords_dir'],
             num_epochs=params_config['epoches_per_eval'],
             shuffle=True,
             batch_size=params_config['batch_size']
         )
     )
-    # results = model.evaluate(
+    results = model.evaluate(
+        input_fn=lambda: census_input_fn_from_tfrecords(
+            data_file=params_config['test_data_tfrecords_dir'],
+            num_epochs=1,
+            shuffle=False,
+            batch_size=params_config['batch_size']
+        )
+    )
+    for key in sorted(results):
+        print('%s: %s' % (key, results[key]))
+
+    # predictions = model.predict(
     #     input_fn=lambda: input_fn_from_tfrecords(
     #         data_file=params_config['test_data_tfrecords_dir'],
     #         num_epochs=1,
@@ -189,25 +200,14 @@ def train_census_data_from_tfrecords():
     #         batch_size=params_config['batch_size']
     #     )
     # )
-    # for key in sorted(results):
-    #     print('%s: %s' % (key, results[key]))
-
-    predictions = model.predict(
-        input_fn=lambda: input_fn_from_tfrecords(
-            data_file=params_config['test_data_tfrecords_dir'],
-            num_epochs=1,
-            shuffle=False,
-            batch_size=params_config['batch_size']
-        )
-    )
-    for x in predictions:
-        print(x['probabilities'][0])
-        print(x['label'][0])
+    # for x in predictions:
+    #     print(x['probabilities'][0])
+    #     print(x['label'][0])
 
 
 if __name__ == '__main__':
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
     tf.compat.v1.set_random_seed(1)
-    # train_census_data()
-    train_census_data_from_tfrecords()
+    train_census_data()
+    # train_census_data_from_tfrecords()
 

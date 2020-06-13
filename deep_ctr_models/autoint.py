@@ -8,7 +8,7 @@ def autoint_model_fn(features, labels, mode, params):
         mean, variance = tf.nn.moments(inputs, [-1], keep_dims=True)
         beta = tf.Variable(tf.zeros(params_shape))
         gamma = tf.Variable(tf.ones(params_shape))
-        normalized = (inputs - mean) / ((variance + epsilon) ** (.5))
+        normalized = (inputs - mean) / ((variance + epsilon) ** 0.5)
         outputs = gamma * normalized + beta
         return outputs
 
