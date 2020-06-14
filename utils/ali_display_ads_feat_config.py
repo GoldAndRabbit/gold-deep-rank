@@ -1,7 +1,10 @@
-import tensorflow.feature_column as fc
-import pandas as pd
 import logging
+import pandas as pd
+import tensorflow.feature_column as fc
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(filename)s[line:%(lineno)d] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+PATH = '/media/psdz/hdd/Download/ali_display_ads/'
 
 ALI_DISPLAY_ADS_COLUMNS = [
     # user feat: 9
@@ -18,20 +21,34 @@ ALI_DISPLAY_ADS_COLUMN_DEFAULTS = [
     [0]
 ]
 
+HASH_BUCKET_CONFIG = {
+    'adgroup_id': 846811,
+    'age_level': 8,
+    'brand': 99815,
+    'campaign_id': 423436,
+    'cate_id': 6769,
+    'cms_group_id': 14,
+    'cms_segid': 98,
+    'customer_id': 255875,
+    'final_gender_code': 3,
+    'new_user_class_level': 5,
+    'occupation': 3,
+    'pid': 2,
+    'pvalue_level': 4,
+    'shopping_level': 4,
+    'userid': 1141729
+}
+
 def build_ali_display_ads_wide_columns():
     numeric_feat = ['price']
     category_feat = [x for x in ALI_DISPLAY_ADS_COLUMNS if x not in numeric_feat and x != 'clk']
-    hash_bucket_config = {
-        'userid':       50000000,
-        'adgroup_id':   10000000,
-        'cate_id':      100000,
-        'pid':          1000000,
-        'campain_id':   1000000,
-    }
+
     base_columns = []
     for feat in category_feat:
-        base_columns.append(fc.indicator_column(fc.categorical_column_with_hash_bucket(feat, hash_bucket_size=100000)))
-
+        cur_hash_size = 1000
+        if HASH_BUCKET_CONFIG[feat] > 1000:
+            cur_hash_size = HASH_BUCKET_CONFIG[feat] + 100000
+        base_columns.append(fc.indicator_column(fc.categorical_column_with_hash_bucket(feat, hash_bucket_size=cur_hash_size)))
     cross_columns = [
         # fc.indicator_column(fc.crossed_column(["education", "occupation"], hash_bucket_size=1000)),
         # fc.indicator_column(fc.crossed_column(["native_country", "occupation"], hash_bucket_size=1000)),
@@ -43,17 +60,12 @@ def build_ali_display_ads_wide_columns():
 def build_ali_display_ads_columns(emb_dims=8):
     numeric_feat = ['price']
     category_feat = [x for x in ALI_DISPLAY_ADS_COLUMNS if x not in numeric_feat and x != 'clk']
-    hash_bucket_config = {
-        'userid':       200000000,
-        'adgroup_id':   50000000,
-        'cate_id':      100000,
-        'pid':          1000000,
-        'campain_id':   1000000,
-    }
     feature_columns = []
     for feat in category_feat:
-        feature_columns.append(fc.embedding_column(
-            fc.categorical_column_with_hash_bucket(feat, hash_bucket_size=hash_bucket_config.get(feat, 100000)), dimension=emb_dims))
+        cur_hash_size = 1000
+        if HASH_BUCKET_CONFIG[feat] > 1000:
+            cur_hash_size = HASH_BUCKET_CONFIG[feat] + 100000
+        feature_columns.append(fc.embedding_column(fc.categorical_column_with_hash_bucket(feat, hash_bucket_size=cur_hash_size), dimension=emb_dims))
     for feat in numeric_feat:
         feature_columns.append(fc.numeric_column(feat))
     feat_field_size = len(feature_columns)
@@ -70,12 +82,11 @@ def unixstamp2date(x):
 
 
 def generate_ali_display_ads_dataset():
-    PATH = '/media/psdz/hdd/Download/ali_display_ads/'
-    logging.info('finish loading...')
+    logging.info('finish loading raw data...')
     ad_feature = pd.read_csv(PATH + 'ad_feature.csv')
     user_feature = pd.read_csv(PATH + 'user_profile.csv')
     raw_sample = pd.read_csv(PATH + 'raw_sample.csv')
-    logging.info('finish mapping date...')
+    logging.info('finish transforming unix date...')
     raw_sample['time_stamp'] = raw_sample['time_stamp'].apply(unixstamp2date)
     raw_sample = raw_sample.drop(['nonclk'], axis=1)
     '''
@@ -86,18 +97,20 @@ def generate_ali_display_ads_dataset():
     '''
     raw_sample['userid'] = raw_sample['user']
     raw_sample = raw_sample[['userid', 'adgroup_id', 'pid', 'time_stamp', 'clk']]
-    logging.info('finish merging...')
+    logging.info('finish merging basic feat...')
     raw_sample = pd.merge(left=raw_sample, right=user_feature, on='userid', how='left')
     raw_sample = pd.merge(left=raw_sample, right=ad_feature, on='adgroup_id', how='left')
     raw_sample['new_user_class_level'] = raw_sample['new_user_class_level ']
     raw_sample['customer_id'] = raw_sample['customer']
     raw_sample['price'] = raw_sample['price'].map(lambda x: int(x))
-    # behavior_log may consume large memory.
-    # behavoir_log = pd.read_csv(PATH + 'behavior_log.csv')
+    raw_sample.to_csv(PATH + 'day_sample.csv', index=False)
     df_train = raw_sample.loc[raw_sample['time_stamp']<='20170512']
     df_test = raw_sample.loc[raw_sample['time_stamp']=='20170513']
     df_train = df_train[ALI_DISPLAY_ADS_COLUMNS]
     df_test = df_test[ALI_DISPLAY_ADS_COLUMNS]
+    logging.info('finish shuffling data...')
+    df_train = df_train.sample(frac=1).reset_index(drop=True)
+    df_test = df_test.sample(frac=1).reset_index(drop=True)
     df_train_sample = df_train.head(20000)
     df_test_sample = df_test.head(20000)
     # NOTE: writing csv file without header.
@@ -108,12 +121,48 @@ def generate_ali_display_ads_dataset():
     df_test_sample.to_csv(PATH + 'test_log_sample.csv', index=False, header=None)
 
 
+def feat_unique_count():
+    logging.info('finish counting...')
+    day_sample = pd.read_csv(PATH + 'day_sample.csv')
+    feat_cnt = {}
+    for feat in ALI_DISPLAY_ADS_COLUMNS:
+        if feat != 'price' and feat != 'clk':
+            tmp = day_sample[feat].unique()
+            feat_cnt[feat] = len(tmp)
+            print('%s: %d' % (feat, len(tmp)))
+    '''
+    {'adgroup_id': 846811,
+     'age_level': 8,
+     'brand': 99815,
+     'campaign_id': 423436,
+     'cate_id': 6769,
+     'cms_group_id': 14,
+     'cms_segid': 98,
+     'customer_id': 255875,
+     'final_gender_code': 3,
+     'new_user_class_level': 5,
+     'occupation': 3,
+     'pid': 2,
+     'pvalue_level': 4,
+     'shopping_level': 4,
+     'userid': 1141729}
+    '''
+    return feat_cnt
+
+
+def generate_stat_feature():
+    # behavior_log consume large memory.
+    behavoir_log = pd.read_csv(PATH + 'behavior_log.csv')
+
+
 def test_ali_display_ads_dataset():
     PATH = '/media/psdz/hdd/Download/ali_display_ads/'
     a = pd.read_csv(PATH + 'train_log_sample.csv', names=ALI_DISPLAY_ADS_COLUMNS)
     pos_sample_ratio = a[['clk', 'userid']].groupby(['clk'],as_index=False).count()
-    print(a.info())
+    logging.info(a.info())
 
 
 if __name__ == '__main__':
-    generate_ali_display_ads_dataset()
+    # generate_ali_display_ads_dataset()
+    feat_unique_count()
+

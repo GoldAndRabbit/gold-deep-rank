@@ -1,4 +1,5 @@
 import shutil
+import os
 import tensorflow as tf
 from utils.ali_display_ads_feat_config import build_ali_display_ads_columns, build_ali_display_ads_wide_columns, ALI_DISPLAY_ADS_COLUMNS, ALI_DISPLAY_ADS_COLUMN_DEFAULTS
 from deep_ctr_models.dcn import dcn_model_fn
@@ -6,6 +7,9 @@ from deep_ctr_models.autoint import autoint_model_fn
 from deep_ctr_models.xdeepfm import xdeepfm_model_fn
 from deep_ctr_models.deepfm import deepfm_model_fn
 from deep_ctr_models.resnet import res_model_fn
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def ali_display_ads_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
@@ -21,7 +25,7 @@ def ali_display_ads_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch
 
     dataset = tf.data.TextLineDataset(data_file)
     if shuffle:
-        dataset = dataset.shuffle(buffer_size=50000)
+        dataset = dataset.shuffle(buffer_size=5000)
     dataset = dataset.map(parse_csv, num_parallel_calls=5)
     dataset = dataset.repeat(num_epochs)
     dataset = dataset.batch(batch_size)
@@ -36,6 +40,7 @@ def build_estimator(model_name, params_config):
         run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
         return tf.estimator.DNNLinearCombinedClassifier(model_dir=params_config['ckpt_dir'],
                                                         linear_feature_columns=params_config['wide_feat_columns'],
+                                                        # linear_feature_columns=None,
                                                         dnn_feature_columns=params_config['columns'],
                                                         dnn_hidden_units=params_config['deep_layer_nerouns'],
                                                         config=run_config)
@@ -64,15 +69,15 @@ def train_ali_display_ads_data():
         # 'test_data_dir': PATH + 'test_log_sample.csv',
         'train_data_dir': PATH + 'train_log.csv',
         'test_data_dir': PATH + 'test_log.csv',
-        'ckpt_dir': './ali_display_ads_ckpt_dir/',
+        'ckpt_dir': PATH + 'ali_display_ads_ckpt_dir/',
         'model_name': 'wdl',
-        'batch_size': 64,
+        'batch_size': 1024,
         'epoches_per_eval': 1,
         'learning_rate': 0.01,
         'optimizer': 'adam',
-        'shuffle': True,
+        'shuffle': False,
         'embedding_dim': 8,
-        'deep_layer_nerouns': [128, 64, 32],
+        'deep_layer_nerouns': [512, 512, 512],
         'columns': columns,
         'feat_field_size': feat_field_size,
         'wide_feat_columns': wide_feat_columns,
