@@ -19,12 +19,14 @@
 |mmoe|Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts.|Google|
 
 ## Experiment dataset
-Alibaba Display Ads
-Criteo
-Avazu
-JD
-Tencent Social Ads: Mobile App Ads Conversion Prediction
-Census Incomes
+|Dataset|Detail|
+|----|----|
+|Census Incomes|.
+|Criteo|.
+|Avazu|.
+|Alibaba Display Ads|.
+|JD|.
+|Tencent Social Ad|.
 
 ## Model evaluation result
 To be updated..
