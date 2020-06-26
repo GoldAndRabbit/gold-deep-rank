@@ -2,7 +2,7 @@ import tensorflow as tf
 
 def autoint_model_fn(features, labels, mode, params):
 
-    def normalize(inputs, epsilon=1e-8):
+    def _normalize(inputs, epsilon=1e-8):
         inputs_shape = inputs.get_shape()
         params_shape = inputs_shape[-1:]
         mean, variance = tf.nn.moments(inputs, [-1], keep_dims=True)
@@ -12,10 +12,12 @@ def autoint_model_fn(features, labels, mode, params):
         outputs = gamma * normalized + beta
         return outputs
 
-    columns = params['columns']
-    feat_field_size = params['feat_field_size']
-    input_layer = tf.feature_column.input_layer(features=features,feature_columns=columns)
-    total_feat = tf.reshape(input_layer, [-1, feat_field_size, 32])
+    deep_columns = params['deep_columns']
+    deep_fields_size = params['deep_fields_size']
+    wide_columns = params['wide_columns']
+    wide_fields_size = params['wide_fields_size']
+    input_layer = tf.feature_column.input_layer(features=features,feature_columns=deep_columns)
+    total_feat = tf.reshape(input_layer, [-1, deep_fields_size, 32])
     att_emb_size = 64
     num_heads = 2
     has_residual = True
@@ -67,7 +69,7 @@ def autoint_model_fn(features, labels, mode, params):
     print('outputs:', outputs.get_shape().as_list())
 
     # Normalize
-    outputs = normalize(outputs)
+    outputs = _normalize(outputs)
 
     output_size = outputs.get_shape().as_list()[1] * outputs.get_shape().as_list()[2]
     outputs = tf.reshape(outputs, shape=[-1, output_size])

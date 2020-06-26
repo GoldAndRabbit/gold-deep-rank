@@ -69,7 +69,7 @@ def train_ali_display_ads_data():
         # 'test_data_dir': PATH + 'test_log_sample.csv',
         'train_data_dir': PATH + 'train_log.csv',
         'test_data_dir': PATH + 'test_log.csv',
-        'ckpt_dir': PATH + 'ali_display_ads_ckpt_dir/',
+        'ckpt_dir': PATH + 'ckpt_dir/',
         'model_name': 'wdl',
         'batch_size': 1024,
         'epoches_per_eval': 1,
@@ -94,7 +94,6 @@ def train_ali_display_ads_data():
             batch_size=params_config['batch_size']
         )
     )
-
     results = model.evaluate(
         input_fn=lambda: ali_display_ads_input_fn_from_csv_file(
             data_file=params_config['test_data_dir'],

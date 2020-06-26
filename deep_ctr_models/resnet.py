@@ -2,14 +2,14 @@ import tensorflow as tf
 
 
 def res_model_fn(features, labels, mode, params):
-    columns = params['columns']
-    feat_field_size = params['feat_field_size']
-    wide_feat_columns = params['wide_feat_columns']
-    wide_field_size = params['wide_field_size']
-    emb_input_layer = tf.feature_column.input_layer(features=features, feature_columns=columns)
+    deep_columns = params['deep_columns']
+    deep_fields_size = params['deep_fields_size']
+    wide_columns = params['wide_columns']
+    wide_fields_size = params['wide_fields_size']
+    emb_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
 
     with tf.name_scope('wide'):
-        wide_input_layer = tf.feature_column.input_layer(features=features, feature_columns=wide_feat_columns)
+        wide_input_layer = tf.feature_column.input_layer(features=features, feature_columns=wide_columns)
         wide_output_layer = tf.layers.dense(inputs=wide_input_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('deep'):

@@ -24,9 +24,11 @@ def dcn_model_fn(features, labels, mode, params):
         res = res + tf.transpose(b)
         return res
 
-    columns = params['columns']
-    feat_field_size = params['feat_field_size']
-    input_layer = tf.feature_column.input_layer(features=features, feature_columns=columns)
+    deep_columns = params['deep_columns']
+    deep_fields_size = params['deep_fields_size']
+    wide_columns = params['wide_columns']
+    wide_fields_size = params['wide_fields_size']
+    input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
 
     with tf.name_scope('cross'):
         column_num = input_layer.get_shape().as_list()[1]

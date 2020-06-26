@@ -39,6 +39,7 @@ HASH_BUCKET_CONFIG = {
     'userid': 1141729
 }
 
+
 def build_ali_display_ads_wide_columns():
     numeric_feat = ['price']
     category_feat = [x for x in ALI_DISPLAY_ADS_COLUMNS if x not in numeric_feat and x != 'clk']
@@ -56,6 +57,7 @@ def build_ali_display_ads_wide_columns():
     feature_columns = base_columns + cross_columns
     feat_field_size = len(feature_columns)
     return feature_columns, feat_field_size
+
 
 def build_ali_display_ads_columns(emb_dims=8):
     numeric_feat = ['price']
