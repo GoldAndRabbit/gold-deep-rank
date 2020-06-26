@@ -1,9 +1,9 @@
-## gold-deep-rank 
-* A well-organized deep neural network framework for Ads/Recsys Ranking process implemented by Tensorflow, adopting tf.estimator api.
+## Gold-deep-rank 
+* A well-organized deep neural network code for Ads/Recsys Ranking process implemented by Tensorflow, adopting tf.estimator api.
 * Support for flexible parameter customization, suitble for industrial development.
 * Tensorflow version: 1.14
 
-## deep ctr models details 
+## Deep ctr models details 
 
 |Model|Paper|Author|
 |----| ---- |----|
@@ -11,16 +11,21 @@
 |DCN|Deep & Cross Network for Ad Click Predictions.|Google|
 |xDeepFM|xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems.|Microsoft|
 
-## deep mtl models details
+## Deep mtl models details
 
 |Model|Paper|Author|
 |----| ---- |----|
 |esmm|Entire Space Multi-Task Model: An Eﬀective Approach for Estimating Post-Click Conversion Rate.|Alimama|
 |mmoe|Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts.|Google|
 
-## experiment dataset
-To be updated..
+## Experiment dataset
+Alibaba Display Ads
+Criteo
+Avazu
+JD
+Tencent Social Ads: Mobile App Ads Conversion Prediction
+Census Incomes
 
-## model evaluation result
+## Model evaluation result
 To be updated..
 
