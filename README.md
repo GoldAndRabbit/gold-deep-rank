@@ -3,7 +3,7 @@
 * Support for flexible parameter customization, suitble for industrial development.
 * Tensorflow version: 1.14
 
-## Deep CTR models Pre
+## Deep CTR models Pref
 
 |Model|Paper|Author|
 |----| ---- |----|
@@ -11,7 +11,7 @@
 |DCN|Deep & Cross Network for Ad Click Predictions.|Google|
 |xDeepFM|xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems.|Microsoft|
 
-## Deep MTL models Pre 
+## Deep MTL models Pref 
 
 |Model|Paper|Author|
 |----| ---- |----|
