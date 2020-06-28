@@ -87,7 +87,7 @@ def padding_data_to_csv():
             return ','.join(tmp)
         else:
             gap = 10 - len(data)
-            pad = ['0'] * gap
+            pad = [''] * gap
             tmp = pad + data
             return ','.join(tmp)
     df_train = pd.read_csv(PATH + 'ama_ele_train.csv')
@@ -101,5 +101,5 @@ def padding_data_to_csv():
 
 
 if __name__ == '__main__':
-    parse()
+    # parse()
     padding_data_to_csv()
