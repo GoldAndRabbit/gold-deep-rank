@@ -27,15 +27,24 @@ def wdl_model_fn(features, labels, mode, params):
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         predictions = {
-            'probabilities': o_prob,
-            'label': predictions
+            'probabilities':    o_prob,
+            'label':            predictions
         }
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.0004, beta1=0.9, beta2=0.999)
+        if params['optimizer'] == 'adam':
+            optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'], beta1=0.9, beta2=0.999, epsilon=1e-8)
+        elif params['optimizer'] == 'adagrad':
+            optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'], initial_accumulator_value=1e-8)
+        elif params['optimizer'] == 'momentum':
+            optimizer = tf.train.MomentumOptimizer(learning_rate=params['learning_rate'], momentum=0.95)
+        elif params['optimizer'] == 'ftrl':
+            optimizer = tf.train.FtrlOptimizer(learning_rate=params['learning_rate'])
+        else:
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=params['learning_rate'])
         train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
 

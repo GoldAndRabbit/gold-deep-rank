@@ -2,17 +2,16 @@ import tensorflow as tf
 
 
 def dcn_model_fn(features, labels, mode, params):
-
     def cross_variable_create(column_num):
         w = tf.Variable(
             tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
         b = tf.Variable(
-            tf.random_normal((column_num,1), mean=0.0, stddev=0.5), dtype=tf.float32)
+            tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
         return w, b
 
     def cross_op(x0, x, w, b):
-        x0 = tf.expand_dims(x0, axis=2)  # mxdx1
-        x = tf.expand_dims(x, axis=2)  # mxdx1
+        x0 = tf.expand_dims(x0, axis=2)     # mxdx1
+        x = tf.expand_dims(x, axis=2)       # mxdx1
         multiple = w.get_shape().as_list()[0]
 
         x0_broad_horizon = tf.tile(x0, [1, 1, multiple])  # mxdx1 -> mxdxd #

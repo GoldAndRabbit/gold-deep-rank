@@ -6,6 +6,7 @@ def deepfm_model_fn(features, labels, mode, params):
     deep_fields_size = params['deep_fields_size']
     wide_columns = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
+    org_emb_size = params['embedding_dim']
     emb_input_layer = tf.feature_column.input_layer(features=features,feature_columns=deep_columns)
 
     with tf.name_scope('wide'):
@@ -18,7 +19,7 @@ def deepfm_model_fn(features, labels, mode, params):
         deep_output_layer = tf.layers.dense(inputs=bn_layer_1, units=40, activation=tf.nn.relu, use_bias=True)
 
     with tf.name_scope('fm'):
-        total_feat = tf.reshape(emb_input_layer, [-1, deep_fields_size, 32])
+        total_feat = tf.reshape(emb_input_layer, [-1, deep_fields_size, org_emb_size])
         sum_square_part = tf.square(tf.reduce_sum(total_feat, 1))
         # print('sum_square_part:', sum_square_part.get_shape().as_list())
         square_sum_part = tf.reduce_sum(tf.square(total_feat), 1)
@@ -36,15 +37,24 @@ def deepfm_model_fn(features, labels, mode, params):
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         predictions = {
-            'probabilities': o_prob,
-            'label': predictions
+            'probabilities':    o_prob,
+            'label':            predictions
         }
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.0004, beta1=0.9, beta2=0.999)
+        if params['optimizer'] == 'adam':
+            optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'], beta1=0.9, beta2=0.999, epsilon=1e-8)
+        elif params['optimizer'] == 'adagrad':
+            optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'], initial_accumulator_value=1e-8)
+        elif params['optimizer'] == 'momentum':
+            optimizer = tf.train.MomentumOptimizer(learning_rate=params['learning_rate'], momentum=0.95)
+        elif params['optimizer'] == 'ftrl':
+            optimizer = tf.train.FtrlOptimizer(learning_rate=params['learning_rate'])
+        else:
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=params['learning_rate'])
         train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
 
@@ -58,3 +68,4 @@ def deepfm_model_fn(features, labels, mode, params):
         tf.summary.scalar('accuracy', accuracy[1])
         tf.summary.scalar('auc', auc[1])
         return tf.estimator.EstimatorSpec(mode, loss=loss, eval_metric_ops=my_metrics)
+
