@@ -21,7 +21,7 @@ def xdeepfm_model_fn(features, labels, mode, params):
     with tf.name_scope('cin'):
         ori_emb_input = tf.reshape(emb_input_layer, [-1, deep_fields_size, org_emb_size])
         cross_layer_sizes = [64, 64, 32]
-        dim = 32 
+        dim = org_emb_size
         final_len = 0
         field_nums = [int(deep_fields_size)]
         cin_layers = [ori_emb_input]

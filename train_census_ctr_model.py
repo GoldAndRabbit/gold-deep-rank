@@ -107,7 +107,7 @@ def train_census_data():
         'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
         # traning process config
         'shuffle':                  True,
-        'model_name':               'dcn',
+        'model_name':               'xdeepfm',
         'optimizer':                'adam',
         'train_epoches':            1,
         'batch_size':               16,
