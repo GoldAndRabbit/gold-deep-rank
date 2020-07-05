@@ -9,19 +9,18 @@ def din_model_fn(features, labels, mode, params):
         queries: (batch_size * emb_size)
         keys:    (batch_size * seq_size * emb_size)
         """
-        emb_size = queries.get_shape().as_list()[-1]                                # get emb_size
-        seq_size = keys.get_shape().as_list()[1]                                    # get seq_size
-        queries = tf.reshape(tf.tile(queries,[1,seq_size]),
-                             [-1,seq_size,emb_size])                                # tile queries as same as keys shape, then reshape
-        att_unit = tf.concat([queries,keys,queries - keys,queries * keys], axis=-1) # batch_size * seq_size * [4 * emb_size]
-        unit_layer_1 = tf.layers.dense(att_unit,80,activation=tf.nn.sigmoid)
-        unit_layer_2 = tf.layers.dense(unit_layer_1,40,activation=tf.nn.sigmoid)
-        unit_layer_3 = tf.layers.dense(unit_layer_2,1,activation=None)              # batch_size * seq_size * 1
-        outputs = tf.reshape(unit_layer_3,[-1,1,seq_size])                          # batch_size * 1 * seq_size
-        outputs = outputs / (math.sqrt(emb_size))                                   # scale
-        outputs = tf.nn.softmax(outputs)                                            # softmax
-        outputs = tf.matmul(outputs, keys)                                          # weighted sum: batch_size * ((1 * seq_size) * (seq_size * emb_size)) => batch_size * 1 * emb_size
-        outputs = tf.reshape(outputs,[-1, emb_size])
+        emb_size = queries.get_shape().as_list()[-1]                                    # get emb_size
+        seq_size = keys.get_shape().as_list()[1]                                        # get seq_size
+        queries = tf.reshape(tf.tile(queries, [1, seq_size]), [-1, seq_size, emb_size]) # tile queries as same as keys shape, then reshape
+        att_unit = tf.concat([queries, keys, queries-keys, queries*keys], axis=-1)      # batch_size * seq_size * [4 * emb_size]
+        unit_layer_1 = tf.layers.dense(att_unit, 32, activation=tf.nn.relu)
+        unit_layer_2 = tf.layers.dense(unit_layer_1, 32, activation=tf.nn.relu)
+        unit_layer_3 = tf.layers.dense(unit_layer_2, 1, activation=None)                # batch_size * seq_size * 1
+        outputs = tf.reshape(unit_layer_3, [-1, 1, seq_size])                           # batch_size * 1 * seq_size
+        outputs = outputs / (math.sqrt(emb_size))                                       # scale
+        outputs = tf.nn.softmax(outputs)                                                # softmax
+        outputs = tf.matmul(outputs, keys)                                              # weighted sum: batch_size * ((1 * seq_size) * (seq_size * emb_size)) => batch_size * 1 * emb_size
+        outputs = tf.reshape(outputs, [-1, emb_size])
         return outputs
 
     emb_feat_columns, emb_field_size = build_ama_ele_columns()
