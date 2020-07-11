@@ -1,3 +1,8 @@
+"""
+    @Date       2020/06/11
+    @Author     AA Gold
+    @Reference  Deepfm: a factorization-machine based neural network for ctr prediction[J].
+"""
 import tensorflow as tf
 
 

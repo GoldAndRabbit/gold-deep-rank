@@ -1,14 +1,17 @@
 import os
 import shutil
 import tensorflow as tf
-from utils.census_ctr_feat_config import build_census_feat_columns
-from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
-from deep_ctr_models.wdl import wdl_model_fn
-from deep_ctr_models.dcn import dcn_model_fn
-from deep_ctr_models.autoint import autoint_model_fn
-from deep_ctr_models.xdeepfm import xdeepfm_model_fn
-from deep_ctr_models.deepfm import deepfm_model_fn
-from deep_ctr_models.resnet import res_model_fn
+from utils.census_ctr_feat_config   import build_census_feat_columns
+from utils.census_ctr_feat_config   import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
+from deep_ctr_models.wdl            import wdl_model_fn
+from deep_ctr_models.dcn            import dcn_model_fn
+from deep_ctr_models.autoint        import autoint_model_fn
+from deep_ctr_models.xdeepfm        import xdeepfm_model_fn
+from deep_ctr_models.deepfm         import deepfm_model_fn
+from deep_ctr_models.resnet         import res_model_fn
+from deep_ctr_models.fibinet        import fibinet_model_fn
+from deep_ctr_models.afm            import afm_model_fn
+from deep_ctr_models.pnn            import pnn_model_fn
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -96,6 +99,9 @@ def train_census_data():
         'xdeepfm':  xdeepfm_model_fn,
         'deepfm':   deepfm_model_fn,
         'resnet':   res_model_fn,
+        'pnn':      pnn_model_fn,
+        'fibinet':  fibinet_model_fn,
+        'afm':      afm_model_fn,
     }
     ARGS = {
         # data/ckpt dir config
@@ -107,7 +113,7 @@ def train_census_data():
         'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
         # traning process config
         'shuffle':                  True,
-        'model_name':               'xdeepfm',
+        'model_name':               'afm',
         'optimizer':                'adam',
         'train_epoches':            1,
         'batch_size':               16,

@@ -1,3 +1,8 @@
+"""
+    @Date       2020/06/11
+    @Author     AA Gold
+    @Reference  xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J].
+"""
 import tensorflow as tf
 
 

@@ -1,12 +1,12 @@
 """
     @Date       2020/06/11
     @Author     AA Gold
-    @Reference  Wide & deep learning for recommender systems[C].
+    @Reference  Product-based neural networks for user response prediction[C].
 """
 import tensorflow as tf
 
 
-def wdl_model_fn(features, labels, mode, params):
+def pnn_model_fn(features, labels, mode, params):
     deep_columns = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
     wide_columns = params['wide_columns']
