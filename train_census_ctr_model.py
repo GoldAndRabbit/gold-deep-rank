@@ -17,20 +17,18 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def census_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
-    assert tf.io.gfile.exists(data_file), ('no file named : ' + str(data_file))
-
-    def parse_csv(value):
+    def _parse_csv(value):
         columns = tf.decode_csv(value, record_defaults=CENSUS_COLUMN_DEFAULTS)
         features = dict(zip(CENSUS_COLUMNS, columns))
         labels = tf.equal(features.pop('income_bracket'), '>50K')
         labels = tf.reshape(labels, [-1])
         labels = tf.to_float(labels)
         return features, labels
-
+    assert tf.io.gfile.exists(data_file), ('no file named : ' + str(data_file))
     dataset = tf.data.TextLineDataset(data_file)
     if shuffle:
         dataset = dataset.shuffle(buffer_size=5000)
-    dataset = dataset.map(parse_csv, num_parallel_calls=5)
+    dataset = dataset.map(_parse_csv, num_parallel_calls=5)
     dataset = dataset.repeat(num_epochs)
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
@@ -39,8 +37,6 @@ def census_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
 
 
 def census_input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
-    assert tf.io.gfile.exists(data_file), ('no file named: ' + str(data_file))
-
     def _parse_census_TFRecords_fn(record):
         features = {
             # int
@@ -66,7 +62,7 @@ def census_input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
         labels = tf.reshape(labels, [-1])
         labels = tf.to_float(labels)
         return features, labels
-
+    assert tf.io.gfile.exists(data_file), ('no file named: ' + str(data_file))
     dataset = tf.data.TFRecordDataset(data_file).map(_parse_census_TFRecords_fn, num_parallel_calls=10)
     if shuffle:
         dataset = dataset.shuffle(buffer_size=5000)
@@ -76,18 +72,11 @@ def census_input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
     features, labels = iterator.get_next()
     return features, labels
 
-
 def build_estimator(ckpt_dir, model_name, params_config):
     model_fn_map = params_config['model_fn_map']
     assert model_name in model_fn_map.keys(), ('no model named : ' + str(model_name))
     run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-    return tf.estimator.Estimator(
-        model_fn=model_fn_map[model_name],
-        model_dir=ckpt_dir,
-        config=run_config,
-        params=params_config
-    )
-
+    return tf.estimator.Estimator(model_fn=model_fn_map[model_name], model_dir=ckpt_dir, config=run_config, params=params_config)
 
 def train_census_data():
     feat_columns = build_census_feat_columns(emb_dim=8)
@@ -133,50 +122,26 @@ def train_census_data():
     model = build_estimator(ARGS['ckpt_dir'], ARGS['model_name'], params_config=ARGS)
     if not ARGS.get('load_tf_records_data'):
         model.train(
-            input_fn=lambda: census_input_fn_from_csv_file(
-                data_file=ARGS['train_data_dir'],
-                num_epochs=ARGS['epoches_per_eval'],
-                shuffle=True if ARGS['shuffle']==True else False,
-                batch_size=ARGS['batch_size']
-            )
+            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['train_data_dir'], num_epochs=ARGS['epoches_per_eval'], shuffle=True if ARGS['shuffle']==True else False, batch_size=ARGS['batch_size'])
         )
         results = model.evaluate(
-            input_fn=lambda: census_input_fn_from_csv_file(
-                data_file=ARGS['test_data_dir'],
-                num_epochs=1,
-                shuffle=False,
-                batch_size=ARGS['batch_size']
-            )
+            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['test_data_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
         )
         for key in sorted(results):
             print('%s: %s' % (key, results[key]))
     else:
         model.train(
-            input_fn=lambda: census_input_fn_from_tfrecords(
-                data_file=ARGS['train_data_tfrecords_dir'],
-                num_epochs=ARGS['epoches_per_eval'],
-                shuffle=True,
-                batch_size=ARGS['batch_size']
-            )
+            input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['train_data_tfrecords_dir'], num_epochs=ARGS['epoches_per_eval'], shuffle=True, batch_size=ARGS['batch_size'])
         )
         results = model.evaluate(
-            input_fn=lambda: census_input_fn_from_tfrecords(
-                data_file=ARGS['test_data_tfrecords_dir'],
-                num_epochs=1,
-                shuffle=False,
-                batch_size=ARGS['batch_size']
+            input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size']
             )
         )
         for key in sorted(results):
             print('%s: %s' % (key,results[key]))
-    # predictions = model.predict(
-    #     input_fn=lambda: census_input_fn_from_tfrecords(
-    #         data_file=ARGS['test_data_tfrecords_dir'],
-    #         num_epochs=1,
-    #         shuffle=False,
-    #         batch_size=ARGS['batch_size']
-    #     )
-    # )
+    predictions = model.predict(
+        input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
+    )
     # for x in predictions:
     #     print(x['probabilities'][0])
     #     print(x['label'][0])
