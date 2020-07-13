@@ -7,43 +7,38 @@ import tensorflow as tf
 
 
 def dcn_model_fn(features, labels, mode, params):
-    def cross_variable_create(column_num):
-        w = tf.Variable(
-            tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
-        b = tf.Variable(
-            tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
-        return w, b
-
-    def cross_op(x0, x, w, b):
-        x0 = tf.expand_dims(x0, axis=2)     # mxdx1
-        x = tf.expand_dims(x, axis=2)       # mxdx1
-        multiple = w.get_shape().as_list()[0]
-
-        x0_broad_horizon = tf.tile(x0, [1, 1, multiple])  # mxdx1 -> mxdxd #
-        x_broad_vertical = tf.transpose(tf.tile(x, [1, 1, multiple]), [0, 2, 1])  # mxdx1 -> mxdxd #
-        w_broad_horizon = tf.tile(w, [1, multiple])  # dx1 -> dxd #
-        mid_res = tf.multiply(tf.multiply(x0_broad_horizon, x_broad_vertical), w)  # mxdxd # here use broadcast compute #
-        res = tf.reduce_sum(mid_res, axis=2)  # mxd #
-        # mxd + 1xd # here also use broadcast compute #a
-        res = res + tf.transpose(b)
-        return res
-
     deep_columns = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
     wide_columns = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
     input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
 
+    def _cross_variable_create(column_num):
+        w = tf.Variable(
+            tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
+        b = tf.Variable(
+            tf.random_normal((column_num, 1), mean=0.0, stddev=0.5), dtype=tf.float32)
+        return w, b
+
+    def _cross_op(x0, x, w, b):
+        x0 = tf.expand_dims(x0, axis=2)                                             # mxdx1
+        x = tf.expand_dims(x, axis=2)                                               # mxdx1
+        multiple = w.get_shape().as_list()[0]
+        x0_broad_horizon = tf.tile(x0, [1, 1, multiple])                            # mxdx1 -> mxdxd
+        x_broad_vertical = tf.transpose(tf.tile(x, [1, 1, multiple]), [0, 2, 1])    # mxdx1 -> mxdxd #
+        w_broad_horizon = tf.tile(w, [1, multiple])                                 # dx1 -> dxd #
+        mid_res = tf.multiply(tf.multiply(x0_broad_horizon, x_broad_vertical), w)   # mxdxd # here use broadcast compute #
+        res = tf.reduce_sum(mid_res, axis=2)                                        # mxd #
+        # mxd + 1xd # here also use broadcast compute #a
+        res = res + tf.transpose(b)
+        return res
+
     with tf.name_scope('cross'):
         column_num = input_layer.get_shape().as_list()[1]
-        c_w_1, c_b_1 = cross_variable_create(column_num)
-        c_w_2, c_b_2 = cross_variable_create(column_num)
-        c_layer_1 = cross_op(
-            input_layer,
-            input_layer,
-            c_w_1,
-            c_b_1) + input_layer
-        c_layer_2 = cross_op(input_layer, c_layer_1, c_w_2, c_b_2) + c_layer_1
+        c_w_1, c_b_1 = _cross_variable_create(column_num)
+        c_w_2, c_b_2 = _cross_variable_create(column_num)
+        c_layer_1 = _cross_op(input_layer, input_layer, c_w_1, c_b_1) + input_layer
+        c_layer_2 = _cross_op(input_layer, c_layer_1, c_w_2, c_b_2) + c_layer_1
 
     with tf.name_scope('deep'):
         d_layer_1 = tf.layers.dense(inputs=input_layer, units=128, activation=tf.nn.relu, use_bias=True)

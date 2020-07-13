@@ -31,15 +31,15 @@ def afm_model_fn(features, labels, mode, params):
             glorot = np.sqrt(2.0 / (hidden_factor[0] + hidden_factor[1]))
             att_weights['att_p'] = tf.Variable(np.random.normal(loc=0, scale=1, size=(hidden_factor[0])), dtype=np.float32, name='att_p')
             att_weights['att_b'] = tf.Variable(np.random.normal(loc=0, scale=glorot, size=(1, hidden_factor[0])), dtype=np.float32, name='att_b')
-            att_mul = tf.layers.dense(element_wise_product,units=hidden_factor[0], kernel_initializer=tf.glorot_uniform_initializer())  # (b, f*(f-1)/2, hidden_factor[0])
-            att_relu = tf.reduce_sum(tf.multiply(att_weights['att_p'],tf.nn.relu(att_mul + att_weights['att_b'])),2, keep_dims=True)
+            att_mul = tf.layers.dense(element_wise_product, units=hidden_factor[0], kernel_initializer=tf.glorot_uniform_initializer())  # (b, f*(f-1)/2, hidden_factor[0])
+            att_relu = tf.reduce_sum(tf.multiply(att_weights['att_p'], tf.nn.relu(att_mul + att_weights['att_b'])), 2, keep_dims=True)
             att_out = tf.nn.softmax(att_relu)                                                                                           # (batch_size, f*(f-1)/2, 1)
             return att_out
-        feature_embeddings = tf.reshape(deep_input_layer, (-1, deep_fields_size, org_emb_size))                 # (batch_size, deep_fields_size, org_emb_size)
+        feat_emb = tf.reshape(deep_input_layer, (-1, deep_fields_size, org_emb_size))                           # (batch_size, deep_fields_size, org_emb_size)
         element_wise_product_list = []
         for i in range(0, deep_fields_size):
             for j in range(i + 1, deep_fields_size):
-                element_wise_product_list.append(tf.multiply(feature_embeddings[:, i, :], feature_embeddings[:, j, :]))
+                element_wise_product_list.append(tf.multiply(feat_emb[:, i, :], feat_emb[:, j, :]))
         element_wise_product = tf.stack(element_wise_product_list)                                              # (f*(f-1)/2, batch_size, org_emb_size)
         element_wise_product = tf.transpose(element_wise_product, perm=[1, 0, 2], name='element_wise_product')  # (batch_size, f*(f-1)/2, org_emb_size)
         att_out = _get_attention_weights(element_wise_product)
@@ -81,7 +81,7 @@ def afm_model_fn(features, labels, mode, params):
         auc = tf.metrics.auc(labels, predictions)
         my_metrics = {
             'accuracy': tf.metrics.accuracy(labels, predictions),
-            'auc': tf.metrics.auc(labels,predictions)
+            'auc':      tf.metrics.auc(labels, predictions)
         }
         tf.summary.scalar('accuracy', accuracy[1])
         tf.summary.scalar('auc', auc[1])

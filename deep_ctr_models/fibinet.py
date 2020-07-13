@@ -1,29 +1,66 @@
 """
-    @Date       2020/06/11
+    @Date       2020/06/13
     @Author     AA Gold
     @Reference  FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction[J].
 """
+import random
 import tensorflow as tf
 
 
 def fibinet_model_fn(features, labels, mode, params):
     deep_columns = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
+    org_emb_size = params['embedding_dim']
     wide_columns = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
     deep_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
+
+    def _build_bilinear_layers(net, params):
+        feat_emb = tf.reshape(net, (-1, deep_fields_size, org_emb_size))
+        cnt = 0
+        element_wise_product_list = []
+        for i in range(0, deep_fields_size):
+            for j in range(i+1, deep_fields_size):
+                with tf.variable_scope('weight_', reuse=tf.AUTO_REUSE):
+                    weight = tf.get_variable(name='weight_' + str(cnt), shape=[org_emb_size, org_emb_size], initializer=tf.glorot_normal_initializer(seed=random.randint(0, 1024)), dtype=tf.float32)
+                element_wise_product_list.append(tf.multiply(tf.matmul(feat_emb[:, i, :], weight), feat_emb[:, j, :]))
+                cnt += 1
+        element_wise_product = tf.stack(element_wise_product_list)
+        element_wise_product = tf.transpose(element_wise_product, perm=[1, 0, 2], name="element_wise_product")
+        bilinear_output = tf.layers.flatten(element_wise_product)
+        return bilinear_output
+
+    def _build_SENET_layers(net, params):
+        reduction_ratio = params['fibinet']['reduction_ratio']
+        feat_emb = tf.reshape(net, (-1, deep_fields_size, org_emb_size))
+        original_feature = feat_emb
+        if params['fibinet']['pooling'] == "max":
+            feat_emb = tf.reduce_max(feat_emb, axis=2)
+        else:
+            feat_emb = tf.reduce_mean(feat_emb, axis=2)
+        reduction_num = int(max(deep_fields_size / reduction_ratio, 1))
+        att_layer = tf.layers.dense(feat_emb, units=reduction_num, activation=tf.nn.relu, kernel_initializer=tf.glorot_uniform_initializer())   # (b, f/r)
+        att_layer = tf.layers.dense(att_layer, units=deep_fields_size,activation=tf.nn.relu, kernel_initializer=tf.glorot_uniform_initializer())          # (b, f)
+        senet_layer = original_feature * tf.expand_dims(att_layer, axis=-1)
+        senet_output = tf.layers.flatten(senet_layer)
+        return senet_output
 
     with tf.name_scope('wide'):
         wide_input_layer = tf.feature_column.input_layer(features=features, feature_columns=wide_columns)
         wide_output_layer = tf.layers.dense(inputs=wide_input_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('deep'):
-        d_layer_1 = tf.layers.dense(inputs=deep_input_layer, units=50, activation=tf.nn.relu, use_bias=True)
-        bn_layer_1 = tf.layers.batch_normalization(inputs=d_layer_1, axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True)
-        deep_output_layer = tf.layers.dense(inputs=bn_layer_1, units=40, activation=tf.nn.relu, use_bias=True)
+        d_layer_1 = tf.layers.dense(inputs=deep_input_layer, units=128, activation=tf.nn.relu, use_bias=True)
+        d_layer_2 = tf.layers.dense(inputs=d_layer_1, units=64, activation=tf.nn.relu, use_bias=True)
+        deep_output_layer = tf.layers.dense(inputs=d_layer_2, units=40, activation=tf.nn.relu, use_bias=True)
+
+    with tf.name_scope('fibi_net'):
+        senet_layer = _build_SENET_layers(deep_input_layer, params)
+        combination_layer = tf.concat([_build_bilinear_layers(deep_input_layer, params),
+                                       _build_bilinear_layers(senet_layer, params)], axis=1)
 
     with tf.name_scope('concat'):
-        m_layer = tf.concat([wide_output_layer, deep_output_layer], axis=-1, name='concat')
+        m_layer = tf.concat([combination_layer, deep_output_layer], axis=-1, name='concat')
         o_layer = tf.layers.dense(inputs=m_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('logit'):
@@ -58,7 +95,7 @@ def fibinet_model_fn(features, labels, mode, params):
         auc = tf.metrics.auc(labels, predictions)
         my_metrics = {
             'accuracy': tf.metrics.accuracy(labels, predictions),
-            'auc': tf.metrics.auc(labels,predictions)
+            'auc':      tf.metrics.auc(labels,      predictions)
         }
         tf.summary.scalar('accuracy', accuracy[1])
         tf.summary.scalar('auc', auc[1])

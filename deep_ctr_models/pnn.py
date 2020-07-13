@@ -9,6 +9,7 @@ import tensorflow as tf
 def pnn_model_fn(features, labels, mode, params):
     deep_columns = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
+    org_emb_size = params['embedding_dim']
     wide_columns = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
     deep_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
@@ -22,8 +23,15 @@ def pnn_model_fn(features, labels, mode, params):
         bn_layer_1 = tf.layers.batch_normalization(inputs=d_layer_1, axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True)
         deep_output_layer = tf.layers.dense(inputs=bn_layer_1, units=40, activation=tf.nn.relu, use_bias=True)
 
+    with tf.name_scope('inner_product'):
+        feat_emb = tf.reshape(deep_input_layer, (-1,deep_fields_size, org_emb_size))
+        inner_product_list = []
+        for i in range(0, deep_fields_size):
+            for j in range(i+1, deep_fields_size):
+                inner_product_list.append(tf.matmul(feat_emb[:, i, :], feat_emb[:, j, :], transpose_b=True))
+
     with tf.name_scope('concat'):
-        m_layer = tf.concat([wide_output_layer, deep_output_layer], axis=-1, name='concat')
+        m_layer = tf.concat([wide_output_layer, deep_output_layer, inner_product_list], axis=-1, name='concat')
         o_layer = tf.layers.dense(inputs=m_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('logit'):

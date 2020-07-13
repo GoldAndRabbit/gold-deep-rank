@@ -113,7 +113,7 @@ def train_census_data():
         'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
         # traning process config
         'shuffle':                  True,
-        'model_name':               'afm',
+        'model_name':               'fibinet',
         'optimizer':                'adam',
         'train_epoches':            1,
         'batch_size':               16,
@@ -125,7 +125,8 @@ def train_census_data():
         'deep_fields_size':         feat_columns['deep_fields_size'],
         'wide_columns':             feat_columns['wide_columns'],
         'wide_fields_size':         feat_columns['wide_fields_size'],
-        'model_fn_map':             MODEL_FN_MAP
+        'model_fn_map':             MODEL_FN_MAP,
+        'fibinet':                  {'pooling': 'max', 'reduction_ratio': 2}
     }
     print('this process will train a: ' + ARGS['model_name'] + ' model...')
     shutil.rmtree(ARGS['ckpt_dir'], ignore_errors=True)

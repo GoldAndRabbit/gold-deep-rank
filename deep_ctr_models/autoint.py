@@ -43,7 +43,6 @@ def autoint_model_fn(features, labels, mode, params):
     V_ = tf.concat(tf.split(V, num_heads, axis=2), axis=0)
     print('Q_.shape', Q_.get_shape().as_list())
 
-
     # Multiplication
     weights = tf.matmul(Q_, tf.transpose(K_, [0, 2, 1]))
     print('multiplication weights:', weights.get_shape().as_list())
