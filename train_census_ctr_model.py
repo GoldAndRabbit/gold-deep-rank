@@ -150,14 +150,6 @@ def train_census_data():
         )
         for key in sorted(results):
             print('%s: %s' % (key, results[key]))
-        # predictions = model.predict(
-        #     input_fn=lambda: input_fn_from_csv_file(
-        #         data_file=ARGS['test_data_dir'],
-        #         num_epochs=1,
-        #         shuffle=False,
-        #         batch_size=ARGS['batch_size']
-        #     )
-        # )
     else:
         model.train(
             input_fn=lambda: census_input_fn_from_tfrecords(
@@ -177,14 +169,14 @@ def train_census_data():
         )
         for key in sorted(results):
             print('%s: %s' % (key,results[key]))
-        # predictions = model.predict(
-        #     input_fn=lambda: input_fn_from_tfrecords(
-        #         data_file=ARGS['test_data_tfrecords_dir'],
-        #         num_epochs=1,
-        #         shuffle=False,
-        #         batch_size=ARGS['batch_size']
-        #     )
-        # )
+    # predictions = model.predict(
+    #     input_fn=lambda: census_input_fn_from_tfrecords(
+    #         data_file=ARGS['test_data_tfrecords_dir'],
+    #         num_epochs=1,
+    #         shuffle=False,
+    #         batch_size=ARGS['batch_size']
+    #     )
+    # )
     # for x in predictions:
     #     print(x['probabilities'][0])
     #     print(x['label'][0])
