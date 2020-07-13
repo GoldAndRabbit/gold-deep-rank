@@ -1,17 +1,17 @@
 import os
 import shutil
 import tensorflow as tf
-from utils.census_ctr_feat_config   import build_census_feat_columns
-from utils.census_ctr_feat_config   import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
-from deep_ctr_models.wdl            import wdl_model_fn
-from deep_ctr_models.dcn            import dcn_model_fn
-from deep_ctr_models.autoint        import autoint_model_fn
-from deep_ctr_models.xdeepfm        import xdeepfm_model_fn
-from deep_ctr_models.deepfm         import deepfm_model_fn
-from deep_ctr_models.resnet         import res_model_fn
-from deep_ctr_models.fibinet        import fibinet_model_fn
-from deep_ctr_models.afm            import afm_model_fn
-from deep_ctr_models.pnn            import pnn_model_fn
+from utils.census_ctr_feat_config import build_census_feat_columns
+from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
+from deep_ctr_models.wdl          import wdl_model_fn
+from deep_ctr_models.dcn          import dcn_model_fn
+from deep_ctr_models.autoint      import autoint_model_fn
+from deep_ctr_models.xdeepfm      import xdeepfm_model_fn
+from deep_ctr_models.deepfm       import deepfm_model_fn
+from deep_ctr_models.resnet       import res_model_fn
+from deep_ctr_models.fibinet      import fibinet_model_fn
+from deep_ctr_models.afm          import afm_model_fn
+from deep_ctr_models.pnn          import pnn_model_fn
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
