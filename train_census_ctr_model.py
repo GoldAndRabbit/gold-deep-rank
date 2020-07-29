@@ -3,7 +3,7 @@ import shutil
 import tensorflow as tf
 from utils.census_ctr_feat_config import build_census_feat_columns
 from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
-from deep_ctr_models.wdl          import wdl_model_fn
+from deep_ctr_models.wdl          import wdl_estimator
 from deep_ctr_models.dcn          import dcn_model_fn
 from deep_ctr_models.autoint      import autoint_model_fn
 from deep_ctr_models.xdeepfm      import xdeepfm_model_fn
@@ -76,13 +76,16 @@ def build_estimator(ckpt_dir, model_name, params_config):
     model_fn_map = params_config['model_fn_map']
     assert model_name in model_fn_map.keys(), ('no model named : ' + str(model_name))
     run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-    return tf.estimator.Estimator(model_fn=model_fn_map[model_name], model_dir=ckpt_dir, config=run_config, params=params_config)
+    if model_name is'wdl':
+        return wdl_estimator(params=params_config, config=run_config)
+    else:
+        return tf.estimator.Estimator(model_fn=model_fn_map[model_name], model_dir=ckpt_dir, config=run_config, params=params_config)
 
 def train_census_data():
     feat_columns = build_census_feat_columns(emb_dim=8)
     CENSUS_PATH = '/media/psdz/hdd/Download/Census/'
     MODEL_FN_MAP = {
-        'wdl':      wdl_model_fn,
+        'wdl':      wdl_estimator,
         'dcn':      dcn_model_fn,
         'autoint':  autoint_model_fn,
         'xdeepfm':  xdeepfm_model_fn,
@@ -102,7 +105,7 @@ def train_census_data():
         'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
         # traning process config
         'shuffle':                  True,
-        'model_name':               'fibinet',
+        'model_name':               'pnn',
         'optimizer':                'adam',
         'train_epoches':            1,
         'batch_size':               16,

@@ -5,29 +5,29 @@ import tensorflow as tf
 
 
 def xdeepfm_model_fn(features, labels, mode, params):
-    deep_columns = params['deep_columns']
+    deep_columns     = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
-    wide_columns = params['wide_columns']
+    org_emb_size     = params['embedding_dim']
+    wide_columns     = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
-    org_emb_size = params['embedding_dim']
-    emb_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
+    deep_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
 
     with tf.name_scope('wide'):
         wide_input_layer = tf.feature_column.input_layer(features=features, feature_columns=wide_columns)
         wide_output_layer = tf.layers.dense(inputs=wide_input_layer, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('deep'):
-        d_layer_1 = tf.layers.dense(inputs=emb_input_layer, units=50, activation=tf.nn.relu, use_bias=True)
+        d_layer_1 = tf.layers.dense(inputs=deep_input_layer, units=50, activation=tf.nn.relu, use_bias=True)
         bn_layer_1 = tf.layers.batch_normalization(inputs=d_layer_1, axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True)
         deep_output_layer = tf.layers.dense(inputs=bn_layer_1, units=40, activation=tf.nn.relu, use_bias=True)
 
     with tf.name_scope('cin'):
-        ori_emb_input = tf.reshape(emb_input_layer, [-1, deep_fields_size, org_emb_size])
+        deep_feat_emb = tf.reshape(deep_input_layer, [-1, deep_fields_size, org_emb_size])
         cross_layer_sizes = [64, 64, 32]
         dim = org_emb_size
         final_len = 0
         field_nums = [int(deep_fields_size)]
-        cin_layers = [ori_emb_input]
+        cin_layers = [deep_feat_emb]
         final_result = []
         split_tensor0 = tf.split(cin_layers[0], dim * [1], 2)
         for idx, layer_size in enumerate(cross_layer_sizes):
@@ -71,7 +71,7 @@ def xdeepfm_model_fn(features, labels, mode, params):
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        if params['optimizer'] == 'adam':
+        if   params['optimizer'] == 'adam':
             optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'], beta1=0.9, beta2=0.999, epsilon=1e-8)
         elif params['optimizer'] == 'adagrad':
             optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'], initial_accumulator_value=1e-8)
@@ -89,7 +89,7 @@ def xdeepfm_model_fn(features, labels, mode, params):
         auc = tf.metrics.auc(labels, predictions)
         my_metrics = {
             'accuracy': tf.metrics.accuracy(labels, predictions),
-            'auc': tf.metrics.auc(labels,predictions)
+            'auc':      tf.metrics.auc(labels,predictions)
         }
         tf.summary.scalar('accuracy', accuracy[1])
         tf.summary.scalar('auc', auc[1])

@@ -15,25 +15,25 @@ def autoint_model_fn(features, labels, mode, params):
         outputs = gamma * normalized + beta
         return outputs
 
-    deep_columns = params['deep_columns']
+    deep_columns     = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
-    wide_columns = params['wide_columns']
+    org_emb_size     = params['embedding_dim']
+    wide_columns     = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
-    org_emb_size = params['embedding_dim']
     input_layer = tf.feature_column.input_layer(features=features,feature_columns=deep_columns)
-    total_feat = tf.reshape(input_layer, [-1, deep_fields_size, org_emb_size])
+    deep_feat_emb = tf.reshape(input_layer, [-1, deep_fields_size, org_emb_size])
     att_emb_size = 64
     num_heads = 2
     has_residual = True
 
     # By linear projection, generate Q, K, V
-    Q = tf.layers.dense(total_feat, att_emb_size, activation=tf.nn.relu)
+    Q = tf.layers.dense(deep_feat_emb, att_emb_size, activation=tf.nn.relu)
     print('Q.shape', Q.get_shape().as_list())
-    K = tf.layers.dense(total_feat, att_emb_size, activation=tf.nn.relu)
-    V = tf.layers.dense(total_feat, att_emb_size, activation=tf.nn.relu)
+    K = tf.layers.dense(deep_feat_emb, att_emb_size, activation=tf.nn.relu)
+    V = tf.layers.dense(deep_feat_emb, att_emb_size, activation=tf.nn.relu)
 
     if has_residual:
-        V_res = tf.layers.dense(total_feat, att_emb_size, activation=tf.nn.relu)
+        V_res = tf.layers.dense(deep_feat_emb, att_emb_size, activation=tf.nn.relu)
 
     # Split and concat
     Q_ = tf.concat(tf.split(Q, num_heads, axis=2), axis=0)
@@ -95,7 +95,7 @@ def autoint_model_fn(features, labels, mode, params):
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        if params['optimizer'] == 'adam':
+        if   params['optimizer'] == 'adam':
             optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'], beta1=0.9, beta2=0.999, epsilon=1e-8)
         elif params['optimizer'] == 'adagrad':
             optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'], initial_accumulator_value=1e-8)

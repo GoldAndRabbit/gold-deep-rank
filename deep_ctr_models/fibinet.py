@@ -6,10 +6,10 @@ import tensorflow as tf
 
 
 def fibinet_model_fn(features, labels, mode, params):
-    deep_columns = params['deep_columns']
+    deep_columns     = params['deep_columns']
     deep_fields_size = params['deep_fields_size']
-    org_emb_size = params['embedding_dim']
-    wide_columns = params['wide_columns']
+    org_emb_size     = params['embedding_dim']
+    wide_columns     = params['wide_columns']
     wide_fields_size = params['wide_fields_size']
     deep_input_layer = tf.feature_column.input_layer(features=features, feature_columns=deep_columns)
 
@@ -75,7 +75,7 @@ def fibinet_model_fn(features, labels, mode, params):
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=o_layer))
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        if params['optimizer'] == 'adam':
+        if   params['optimizer'] == 'adam':
             optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'], beta1=0.9, beta2=0.999, epsilon=1e-8)
         elif params['optimizer'] == 'adagrad':
             optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'], initial_accumulator_value=1e-8)
