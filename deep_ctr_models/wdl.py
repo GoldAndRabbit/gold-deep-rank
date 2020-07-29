@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  Wide & deep learning for recommender systems[C].
 """
 import tensorflow as tf

@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  Deep Residual Learning for Image Recognition.
 """
 import tensorflow as tf

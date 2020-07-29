@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  Product-based neural networks for user response prediction[C].
 """
 import tensorflow as tf

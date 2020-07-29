@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  Attentional factorization machines: Learning the weight of feature interactions via attention networks[J].
 """
 import numpy as np

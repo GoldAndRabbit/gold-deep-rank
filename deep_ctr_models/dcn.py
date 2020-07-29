@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  Deep & cross network for ad click predictions[C].
 """
 import tensorflow as tf

@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/13
-    @Author     AA Gold
     @Reference  FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction[J].
 """
 import random

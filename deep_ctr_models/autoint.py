@@ -1,6 +1,4 @@
 """
-    @Date       2020/06/11
-    @Author     AA Gold
     @Reference  AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks[J]
 """
 import tensorflow as tf
