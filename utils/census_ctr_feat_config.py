@@ -31,8 +31,8 @@ def build_ama_ele_columns():
 
 def build_census_feat_columns(emb_dim=8):
     def _get_numeric_feat_range():
-        train = pd.read_csv('toy_data/adult.data', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
-        test = pd.read_csv('toy_data/adult.test', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
+        train = pd.read_csv('data/census/adult.data', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
+        test = pd.read_csv('data/census/adult.test', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
         total = pd.concat([train, test], axis=0)
         numeric_range = {}
         for col in WDL_CONFIG['deep_bucket_emb_cols']:

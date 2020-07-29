@@ -80,7 +80,7 @@ def parse_ama_ele_TFRecords_fn(record):
 
 
 if __name__ == '__main__':
-    PATH = '/home/psdz/repos/gold-deep-rank/toy_data/'
+    PATH = '/census_data/'
     train_csv_dir = PATH + 'ama_ele_train_pad.csv'
     train_tfrecords_dir = PATH + 'ama_ele_train_pad.tfrecords'
     test_csv_dir = PATH + 'ama_ele_test_pad.csv'

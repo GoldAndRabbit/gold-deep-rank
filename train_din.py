@@ -66,10 +66,10 @@ def train_sequence_data():
         'model_type': 'din',
         'train_epoches': 1,
         'epoches_per_eval': 1,
-        'train_data': 'toy_data/ama_ele_train.csv',
-        'test_data': 'toy_data/ama_ele_test.csv',
-        'train_tfrecords_data': 'toy_data/ama_ele_train_pad.tfrecords',
-        'test_tfrecords_data': 'toy_data/ama_ele_test_pad.tfrecords',
+        'train_data': 'census_data/ama_ele_train.csv',
+        'test_data': 'census_data/ama_ele_test.csv',
+        'train_tfrecords_data': 'census_data/ama_ele_train_pad.tfrecords',
+        'test_tfrecords_data': 'census_data/ama_ele_test_pad.tfrecords',
         'batch_size': 8,
     }
     print('using: ' +  all_paras['model_type'] + ' model...')

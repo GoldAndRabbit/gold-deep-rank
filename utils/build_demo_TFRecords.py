@@ -70,7 +70,7 @@ def parse_tf_records_fn(record):
     return parsed
 
 if __name__ == '__main__':
-    file_path = 'toy_data/demo.tfrecords'
+    file_path = 'census_data/demo.tfrecords'
     file_paths = [file_path]
     build_demo_tf_records(mock_test_data(),file_path)
     dataset = tf.data.TFRecordDataset(file_path).map(parse_tf_records_fn, num_parallel_calls=10).prefetch(500000)

@@ -97,15 +97,15 @@ def train_census_data():
     }
     ARGS = {
         # data/ckpt dir config
-        'train_data_dir':           'toy_data/adult.data',
-        'test_data_dir':            'toy_data/adult.test',
-        'train_data_tfrecords_dir': 'toy_data/census_adult.tfrecords',
-        'test_data_tfrecords_dir':  'toy_data/census_test.tfrecords',
+        'train_data_dir':           'data/census/adult.data',
+        'test_data_dir':            'data/census/adult.test',
+        'train_data_tfrecords_dir': 'data/census/census_adult.tfrecords',
+        'test_data_tfrecords_dir':  'data/census/census_test.tfrecords',
         'load_tf_records_data':     False,
         'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
         # traning process config
         'shuffle':                  True,
-        'model_name':               'pnn',
+        'model_name':               'wdl',
         'optimizer':                'adam',
         'train_epoches':            1,
         'batch_size':               16,

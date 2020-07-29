@@ -47,9 +47,9 @@ def train_essm_census_data():
         'model_type': 'essm',
         'train_epoches': 2,
         'epoches_per_eval': 2,
-        'train_data': 'toy_data/adult.data',
-        'test_data': 'toy_data/adult.test',
-        'train_data_tfrecords_dir': 'toy_data/census_adult.tfrecords',
+        'train_data': 'census_data/adult.data',
+        'test_data': 'census_data/adult.test',
+        'train_data_tfrecords_dir': 'census_data/census_adult.tfrecords',
         'batch_size': 8,
     }
     print('using: ' +  all_paras['model_type'] + ' model...')
@@ -81,8 +81,8 @@ def train_mmoe_census_data():
         'model_type': 'mmoe',
         'train_epoches': 2,
         'epoches_per_eval': 2,
-        'train_data': 'toy_data/adult.data',
-        'test_data': 'toy_data/adult.test',
+        'train_data': 'census_data/adult.data',
+        'test_data': 'census_data/adult.test',
         'batch_size': 8,
     }
     print('using: ' +  all_paras['model_type'] + ' model...')

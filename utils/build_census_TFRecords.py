@@ -99,10 +99,10 @@ def parse_census_TFRecords_fn(record):
 
 
 if __name__ == '__main__':
-    train_csv_dir = os.getcwd().replace('utils', '/toy_data/adult.data')
-    train_tfrecords_dir = os.getcwd().replace('utils', '/toy_data/census_adult.tfrecords')
-    test_csv_dir = os.getcwd().replace('utils', '/toy_data/adult.test')
-    test_tfrecords_dir = os.getcwd().replace('utils', '/toy_data/census_test.tfrecords')
+    train_csv_dir = os.getcwd().replace('utils', '/data/census/adult.data')
+    test_csv_dir = os.getcwd().replace('utils', '/data/census/adult.test')
+    train_tfrecords_dir = os.getcwd().replace('utils', '/data/census/census_adult.tfrecords')
+    test_tfrecords_dir = os.getcwd().replace('utils', '/data/census/census_test.tfrecords')
 
     # build_census_TFRecords(csv_file_dir=train_csv_dir, tfrecords_dir=train_tfrecords_dir)
     # build_census_TFRecords(csv_file_dir=test_csv_dir, tfrecords_dir=test_tfrecords_dir)

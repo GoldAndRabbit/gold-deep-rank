@@ -8,8 +8,8 @@ SEQ_COLUMNS = ['user_id', 'seq', 'item_id', 'seq_cate', 'item_cate', 'label']
 SEQ_COLUMNS_DEFAULTS = [[''], [''], [''], [''], [''], ['0']]
 
 def get_census_numeric_feat_range():
-    train = pd.read_csv('./toy_data/adult.data',header=None,names=CENSUS_COLUMNS)[['age','education_num','capital_gain','capital_loss','hours_per_week']]
-    test = pd.read_csv('./toy_data/adult.test',header=None,names=CENSUS_COLUMNS)[['age','education_num','capital_gain','capital_loss','hours_per_week']]
+    train = pd.read_csv('./census_data/adult.data',header=None,names=CENSUS_COLUMNS)[['age','education_num','capital_gain','capital_loss','hours_per_week']]
+    test = pd.read_csv('./census_data/adult.test',header=None,names=CENSUS_COLUMNS)[['age','education_num','capital_gain','capital_loss','hours_per_week']]
     total = pd.concat([train, test], axis=0)
     n_range = dict()
     n_range['age'] = (total['age'].min(), total['age'].max())

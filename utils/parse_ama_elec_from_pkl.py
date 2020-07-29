@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 from tqdm import tqdm
 
-PATH = '/home/psdz/repos/gold-deep-rank/toy_data/'
+PATH = '/census_data/'
 
 def list_to_str(a_list):
     return ",".join(list(map(str, a_list)))
