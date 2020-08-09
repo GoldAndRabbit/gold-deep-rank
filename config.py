@@ -76,6 +76,6 @@ class CONFIG:
 
 MODEL_PARAMS = {
     'batch_size': 512,
-    'num_epochs': 1,
-    'buffer_size': 500
+    'num_epochs': 256,
+    'buffer_size': 5000
 }
