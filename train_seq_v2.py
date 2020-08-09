@@ -32,22 +32,22 @@ def seq_input_fn(data_file, is_predict, config):
 def build_seq_estimator(model_dir):
     run_config = tf.estimator.RunConfig().replace(
         session_config=tf.ConfigProto(device_count={'GPU': 0}),
-        save_summary_steps=200,
-        log_step_count_steps=200,
+        save_summary_steps=2000,
+        log_step_count_steps=2000,
         keep_checkpoint_max=3,
-        save_checkpoints_steps=1000
+        save_checkpoints_steps=5000
     )
     with open('data/amazon/remap.pkl','rb') as f:
         _ = pickle.load(f)
         AMAZON_CATE_LIST = pickle.load(f)
         AMAZON_USER_COUNT, AMAZON_ITEM_COUNT, AMAZON_CATE_COUNT, _ = pickle.load(f)
-    AMAZON_EMB_DIM = 8
+    AMAZON_EMB_DIM = 64
     params_config = {
         'dropout_rate':             0.1,
         'batch_norm':               True,
         'learning_rate':            0.01,
-        'hidden_units':             [64, 32, 16],
-        'attention_hidden_units':   [32, 16],
+        'hidden_units':             [256, 256, 256],
+        'attention_hidden_units':   [64, 32],
         'amazon_item_count':        AMAZON_ITEM_COUNT,
         'amazon_cate_count':        AMAZON_CATE_COUNT,
         'amazon_emb_dim':           AMAZON_EMB_DIM
