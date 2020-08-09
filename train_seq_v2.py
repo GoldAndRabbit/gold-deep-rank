@@ -35,7 +35,7 @@ def build_seq_estimator(model_dir):
         save_summary_steps=50,
         log_step_count_steps=50,
         keep_checkpoint_max=3,
-        save_checkpoints_steps =50
+        save_checkpoints_steps=50
     )
     with open('data/amazon/remap.pkl','rb') as f:
         _ = pickle.load(f)
