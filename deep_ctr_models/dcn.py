@@ -46,7 +46,7 @@ def dcn_model_fn(features, labels, mode, params):
 
     with tf.name_scope('concat'):
         m_layer = tf.concat([d_layer_2, c_layer_2], 1)
-        m_layer_1 = tf.layers.dense(inputs=m_layer,units=32, activation=tf.nn.relu, use_bias=True)
+        m_layer_1 = tf.layers.dense(inputs=m_layer, units=32, activation=tf.nn.relu, use_bias=True)
         o_layer = tf.layers.dense(inputs=m_layer_1, units=1, activation=None, use_bias=True)
 
     with tf.name_scope('predicted_label'):
