@@ -32,10 +32,10 @@ def seq_input_fn(data_file, is_predict, config):
 def build_seq_estimator(model_dir):
     run_config = tf.estimator.RunConfig().replace(
         session_config=tf.ConfigProto(device_count={'GPU': 0}),
-        save_summary_steps=50,
-        log_step_count_steps=50,
+        save_summary_steps=200,
+        log_step_count_steps=200,
         keep_checkpoint_max=3,
-        save_checkpoints_steps=50
+        save_checkpoints_steps=1000
     )
     with open('data/amazon/remap.pkl','rb') as f:
         _ = pickle.load(f)
