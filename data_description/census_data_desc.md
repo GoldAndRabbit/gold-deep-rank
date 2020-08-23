@@ -12,7 +12,7 @@ Prediction task is to determine whether a person makes over 50K a year.
 |capital-gain|continuous|
 |capital-loss|continuous|
 |hours-per-week|continuous|
-|sex|Female, Male.|
+|gender|Female, Male.|
 |race|White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.|
 |occupation|Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces.|
 |relationship|Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried.|

@@ -1,25 +1,24 @@
 import os
 import shutil
 import tensorflow as tf
-from utils.census_ctr_feat_config import build_census_feat_columns
-from utils.census_ctr_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
-from deep_ctr_models.wdl          import wdl_estimator
-from deep_ctr_models.dcn          import dcn_model_fn
-from deep_ctr_models.autoint      import autoint_model_fn
-from deep_ctr_models.xdeepfm      import xdeepfm_model_fn
-from deep_ctr_models.deepfm       import deepfm_model_fn
-from deep_ctr_models.resnet       import res_model_fn
-from deep_ctr_models.fibinet      import fibinet_model_fn
-from deep_ctr_models.afm          import afm_model_fn
-from deep_ctr_models.pnn          import pnn_model_fn
+from feat_config.census_ctr_feat_config import CENSUS_CONFIG, build_census_feat_columns
+from deep_ctr_models.wdl     import wdl_estimator
+from deep_ctr_models.dcn     import dcn_model_fn
+from deep_ctr_models.autoint import autoint_model_fn
+from deep_ctr_models.xdeepfm import xdeepfm_model_fn
+from deep_ctr_models.deepfm  import deepfm_model_fn
+from deep_ctr_models.resnet  import res_model_fn
+from deep_ctr_models.fibinet import fibinet_model_fn
+from deep_ctr_models.afm     import afm_model_fn
+from deep_ctr_models.pnn     import pnn_model_fn
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def census_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
     def _parse_csv(value):
-        columns = tf.decode_csv(value, record_defaults=CENSUS_COLUMN_DEFAULTS)
-        features = dict(zip(CENSUS_COLUMNS, columns))
+        columns = tf.decode_csv(value, record_defaults=CENSUS_CONFIG['columns_defaults'])
+        features = dict(zip(CENSUS_CONFIG['columns'],columns))
         labels = tf.equal(features.pop('income_bracket'), '>50K')
         labels = tf.reshape(labels, [-1])
         labels = tf.to_float(labels)
@@ -75,8 +74,14 @@ def census_input_fn_from_tfrecords(data_file, num_epochs, shuffle, batch_size):
 def build_estimator(ckpt_dir, model_name, params_config):
     model_fn_map = params_config['model_fn_map']
     assert model_name in model_fn_map.keys(), ('no model named : ' + str(model_name))
-    run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-    if model_name is'wdl':
+    run_config = tf.estimator.RunConfig().replace(
+        session_config=tf.ConfigProto(device_count={'GPU': 0}),
+        save_checkpoints_steps=2000,
+        save_summary_steps=500,
+        log_step_count_steps=500,
+        keep_checkpoint_max=3
+    )
+    if model_name is 'wdl':
         return wdl_estimator(params=params_config, config=run_config)
     else:
         return tf.estimator.Estimator(model_fn=model_fn_map[model_name], model_dir=ckpt_dir, config=run_config, params=params_config)
@@ -107,7 +112,7 @@ def train_census_data():
         'shuffle':                  True,
         'model_name':               'wdl',
         'optimizer':                'adam',
-        'train_epoches':            1,
+        'train_epoches_num':        1,
         'batch_size':               16,
         'epoches_per_eval':         2,
         'learning_rate':            0.01,
@@ -125,7 +130,7 @@ def train_census_data():
     model = build_estimator(ARGS['ckpt_dir'], ARGS['model_name'], params_config=ARGS)
     if not ARGS.get('load_tf_records_data'):
         model.train(
-            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['train_data_dir'], num_epochs=ARGS['train_epoches'], shuffle=True if ARGS['shuffle']==True else False, batch_size=ARGS['batch_size'])
+            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['train_data_dir'], num_epochs=ARGS['train_epoches_num'], shuffle=True if ARGS['shuffle']==True else False, batch_size=ARGS['batch_size'])
         )
         results = model.evaluate(
             input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['test_data_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
@@ -147,7 +152,8 @@ def train_census_data():
     )
     # for x in predictions:
     #     print(x['probabilities'][0])
-    #     print(x['label'][0])
+    #     print(x['label'][0]))
+
 
 
 if __name__ == '__main__':

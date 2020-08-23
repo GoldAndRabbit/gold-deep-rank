@@ -1,6 +1,6 @@
 import math
 import tensorflow as tf
-from utils.ama_ele_feat_config import build_ama_ele_columns
+from feat_config.ama_ele_feat_config import build_ama_ele_columns
 
 
 def din_model_fn(features, labels, mode, params):

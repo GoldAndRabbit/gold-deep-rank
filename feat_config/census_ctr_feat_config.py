@@ -1,51 +1,43 @@
-import tensorflow.feature_column as fc
 import pandas as pd
 import numpy as np
+import tensorflow.feature_column as fc
 
-CENSUS_COLUMNS = ['age','workclass','fnlwgt','education','education_num','marital_status','occupation','relationship','race','gender','capital_gain','capital_loss','hours_per_week','native_country','income_bracket']
-CENSUS_COLUMN_DEFAULTS = [[-1],[''],[-1],[''],[-1],[''],[''],[''],[''],[''],[-1],[-1],[-1],[''],['']]
-SEQ_COLUMNS = ['user_id', 'seq', 'item_id', 'seq_cate', 'item_cate', 'label']
-SEQ_COLUMNS_DEFAULTS = [[''], [''], [''], [''], [''], ['0']]
-
-WDL_CONFIG = {}
-WDL_CONFIG['deep_emb_cols'] = ['gender','education','relationship','marital_status','workclass','native_country','occupation']
-WDL_CONFIG['deep_bucket_emb_cols'] = ['age','education_num','capital_gain','capital_loss','hours_per_week']
-WDL_CONFIG['wide_muti_hot_cols'] = WDL_CONFIG['deep_emb_cols']
-WDL_CONFIG['wide_bucket_cols'] = WDL_CONFIG['deep_bucket_emb_cols']
-WDL_CONFIG['wide_cross_cols'] = [
-    ('education','occupation'),
-    ('native_country','occupation'),
-    ('gender','occupation')
-]
-
-
-def build_ama_ele_columns():
-    feature_columns = [
-        fc.embedding_column(fc.categorical_column_with_hash_bucket('user_id',   hash_bucket_size=200000), dimension=32),
-        fc.embedding_column(fc.categorical_column_with_hash_bucket('item_id',   hash_bucket_size=70000),  dimension=32),
-        fc.embedding_column(fc.categorical_column_with_hash_bucket('item_cate', hash_bucket_size=1000),   dimension=32),
-    ]
-    feat_field_size = len(feature_columns)
-    return feature_columns, feat_field_size
-
+CENSUS_CONFIG = {
+    'columns':  ['age','workclass','fnlwgt','education','education_num','marital_status','occupation','relationship','race','gender','capital_gain','capital_loss','hours_per_week','native_country','income_bracket'],
+    'columns_defaults': [[-1],[''],[-1],[''],[-1],[''],[''],[''],[''],[''],[-1],[-1],[-1],[''],['']],
+    'vocab_size': {
+        'gender':         2,
+        'education':      16,
+        'relationship':   6,
+        'marital_status': 7,
+        'workclass':      9,
+        'native_country': 42,
+        'occupation':     15,
+    },
+    'deep_emb_cols'         : ['gender','education','relationship','marital_status','workclass','native_country','occupation'],
+    'deep_bucket_emb_cols'  : ['age','education_num','capital_gain','capital_loss','hours_per_week'],
+    'wide_muti_hot_cols'    : ['gender','education','relationship','marital_status','workclass','native_country','occupation'],
+    'wide_bucket_cols'      : ['age','education_num','capital_gain','capital_loss','hours_per_week'],
+    'wide_cross_cols'       : [('education','occupation'), ('native_country','occupation'), ('gender','occupation')],
+}
 
 def build_census_feat_columns(emb_dim=8):
     def _get_numeric_feat_range():
-        train = pd.read_csv('data/census/adult.data', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
-        test = pd.read_csv('data/census/adult.test', header=None, names=CENSUS_COLUMNS)[WDL_CONFIG['deep_bucket_emb_cols']]
+        train = pd.read_csv('data/census/adult.data',header=None,names=CENSUS_CONFIG['columns'])[CENSUS_CONFIG['deep_bucket_emb_cols']]
+        test = pd.read_csv('data/census/adult.test',header=None,names=CENSUS_CONFIG['columns'])[CENSUS_CONFIG['deep_bucket_emb_cols']]
         total = pd.concat([train, test], axis=0)
         numeric_range = {}
-        for col in WDL_CONFIG['deep_bucket_emb_cols']:
+        for col in CENSUS_CONFIG['deep_bucket_emb_cols']:
             numeric_range[col] = (total[col].min(), total[col].max())
         return numeric_range
 
     def _build_census_deep_columns(emb_dim=8, numeric_range=None):
         feature_columns = []
-        for col in WDL_CONFIG['deep_emb_cols']:
+        for col in CENSUS_CONFIG['deep_emb_cols']:
             feature_columns.append(
-                fc.embedding_column(fc.categorical_column_with_hash_bucket(col, hash_bucket_size=1000), dimension=emb_dim)
+                fc.embedding_column(fc.categorical_column_with_hash_bucket(col, hash_bucket_size=1000 if CENSUS_CONFIG['vocab_size'][col]<=1000 else CENSUS_CONFIG['vocab_size'][col]+10000), dimension=emb_dim)
             )
-        for col in WDL_CONFIG['deep_bucket_emb_cols']:
+        for col in CENSUS_CONFIG['deep_bucket_emb_cols']:
             feature_columns.append(
                 fc.embedding_column(fc.bucketized_column(fc.numeric_column(col), boundaries=list(np.linspace(numeric_range[col][0], numeric_range[col][1], 1000))), dimension=emb_dim)
             )
@@ -54,17 +46,17 @@ def build_census_feat_columns(emb_dim=8):
 
     def _build_census_wide_columns(numeric_range=None):
         base_columns, cross_columns = [], []
-        for col in WDL_CONFIG['wide_muti_hot_cols']:
+        for col in CENSUS_CONFIG['wide_muti_hot_cols']:
             base_columns.append(
-                fc.indicator_column(fc.categorical_column_with_hash_bucket(col, hash_bucket_size=1000))
+                fc.indicator_column(fc.categorical_column_with_hash_bucket(col, hash_bucket_size=1000 if CENSUS_CONFIG['vocab_size'][col]<=1000 else CENSUS_CONFIG['vocab_size'][col]+10000))
             )
-        for col in WDL_CONFIG['wide_bucket_cols']:
+        for col in CENSUS_CONFIG['wide_bucket_cols']:
             base_columns.append(
-                fc.bucketized_column(fc.numeric_column(col), boundaries=list(np.linspace(numeric_range[col][0], numeric_range['age'][1], 1000)))
+                fc.bucketized_column(fc.numeric_column(col), boundaries=list(np.linspace(numeric_range[col][0], numeric_range[col][1], 1000)))
             )
-        for col in WDL_CONFIG['wide_cross_cols']:
+        for col in CENSUS_CONFIG['wide_cross_cols']:
             cross_columns.append(
-                fc.indicator_column(fc.crossed_column([col[0], col[1]], hash_bucket_size=1000))
+                fc.indicator_column(fc.crossed_column([col[0], col[1]], hash_bucket_size=10000))
             )
         feature_columns = base_columns + cross_columns
         feat_field_size = len(feature_columns)
@@ -73,13 +65,12 @@ def build_census_feat_columns(emb_dim=8):
     numeric_range = _get_numeric_feat_range()
     deep_columns, deep_fields_size = _build_census_deep_columns(emb_dim, numeric_range)
     wide_columns, wide_fields_size = _build_census_wide_columns(numeric_range)
-
     feat_config = {
         'deep_columns':     deep_columns,
         'deep_fields_size': deep_fields_size,
         'wide_columns':     wide_columns,
         'wide_fields_size': wide_fields_size,
-        'embedding_dim':    emb_dim
+        'embedding_dim':    emb_dim,
     }
     return feat_config
 

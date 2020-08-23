@@ -3,7 +3,7 @@ import tensorflow as tf
 from deep_mtl_models.essm import essm_model_fn
 from deep_mtl_models.mmoe import mmoe_model_fn
 
-from utils.census_mtl_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
+from feat_config.census_mtl_feat_config import CENSUS_COLUMNS, CENSUS_COLUMN_DEFAULTS
 
 def build_estimator(model_dir, model_type, paras):
     MODEL_FN_MAP = {

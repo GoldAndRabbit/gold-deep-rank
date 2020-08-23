@@ -1,5 +1,5 @@
 import tensorflow as tf
-from utils.census_mtl_feat_config import build_mtl_census_emb_columns
+from feat_config.census_mtl_feat_config import build_mtl_census_emb_columns
 
 
 def build_deep_layers(net):

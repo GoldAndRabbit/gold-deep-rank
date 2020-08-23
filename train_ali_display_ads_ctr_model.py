@@ -1,23 +1,26 @@
-import shutil
 import os
+import shutil
 import tensorflow as tf
-from utils.ali_display_ads_feat_config import build_ali_display_ads_columns, build_ali_display_ads_wide_columns, ALI_DISPLAY_ADS_COLUMNS, ALI_DISPLAY_ADS_COLUMN_DEFAULTS
-from deep_ctr_models.dcn import dcn_model_fn
+from feat_config.ali_display_ads_feat_config import ALI_DISPLAY_ADS_CONFIG, build_ali_display_ads_feat_columns
+from deep_ctr_models.wdl     import wdl_estimator
+from deep_ctr_models.dcn     import dcn_model_fn
 from deep_ctr_models.autoint import autoint_model_fn
 from deep_ctr_models.xdeepfm import xdeepfm_model_fn
-from deep_ctr_models.deepfm import deepfm_model_fn
-from deep_ctr_models.resnet import res_model_fn
+from deep_ctr_models.deepfm  import deepfm_model_fn
+from deep_ctr_models.resnet  import res_model_fn
+from deep_ctr_models.fibinet import fibinet_model_fn
+from deep_ctr_models.afm     import afm_model_fn
+from deep_ctr_models.pnn     import pnn_model_fn
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 
 def ali_display_ads_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch_size):
     assert tf.io.gfile.exists(data_file), ('no file named : ' + str(data_file))
 
     def parse_csv(value):
-        columns = tf.decode_csv(value, record_defaults=ALI_DISPLAY_ADS_COLUMN_DEFAULTS)
-        features = dict(zip(ALI_DISPLAY_ADS_COLUMNS, columns))
+        columns = tf.decode_csv(value, record_defaults=ALI_DISPLAY_ADS_CONFIG['columns_defaults'])
+        features = dict(zip(ALI_DISPLAY_ADS_CONFIG['columns'], columns))
         labels = tf.equal(features.pop('clk'), 1)
         labels = tf.reshape(labels, [-1])
         labels = tf.to_float(labels)
@@ -34,80 +37,78 @@ def ali_display_ads_input_fn_from_csv_file(data_file, num_epochs, shuffle, batch
     return features, labels
 
 
-def build_estimator(model_name, params_config):
-    if model_name == 'wdl':
-        columns, feat_field_size = build_ali_display_ads_columns(emb_dims=params_config['embedding_dim'])
-        run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-        return tf.estimator.DNNLinearCombinedClassifier(model_dir=params_config['ckpt_dir'],
-                                                        linear_feature_columns=params_config['wide_feat_columns'],
-                                                        # linear_feature_columns=None,
-                                                        dnn_feature_columns=params_config['columns'],
-                                                        dnn_hidden_units=params_config['deep_layer_nerouns'],
-                                                        config=run_config)
+def build_estimator(ckpt_dir, model_name, params_config):
+    model_fn_map = params_config['model_fn_map']
+    assert model_name in model_fn_map.keys(), ('no model named : ' + str(model_name))
+    run_config = tf.estimator.RunConfig().replace(
+        session_config=tf.ConfigProto(device_count={'GPU': 0}),
+        save_checkpoints_steps=2000,
+        save_summary_steps=500,
+        log_step_count_steps=500,
+        keep_checkpoint_max=3
+    )
+    if model_name is 'wdl':
+        return wdl_estimator(params=params_config, config=run_config)
     else:
-        MODEL_FN_MAP = {
-            'dcn':          dcn_model_fn,
-            'autoint':      autoint_model_fn,
-            'xdeepfm':      xdeepfm_model_fn,
-            'deepfm':       deepfm_model_fn,
-            'res_model_fn': res_model_fn,
-        }
-        assert model_name in MODEL_FN_MAP.keys(), ('no model named : ' + str(model_name))
-        run_config = tf.estimator.RunConfig().replace(session_config=tf.ConfigProto(device_count={'GPU': 0}))
-        return tf.estimator.Estimator(model_fn=MODEL_FN_MAP[model_name],
-                                      model_dir=params_config['ckpt_dir'],
-                                      config=run_config,
-                                      params=params_config)
+        return tf.estimator.Estimator(model_fn=model_fn_map[model_name], model_dir=ckpt_dir, config=run_config, params=params_config)
 
 
 def train_ali_display_ads_data():
-    columns, feat_field_size = build_ali_display_ads_columns(emb_dims=8)
-    wide_feat_columns, wide_field_size = build_ali_display_ads_wide_columns()
-    PATH = '/media/psdz/hdd/Download/ali_display_ads/'
-    params_config = {
-        # 'train_data_dir': PATH + 'train_log_sample.csv',
-        # 'test_data_dir': PATH + 'test_log_sample.csv',
-        'train_data_dir': PATH + 'train_log.csv',
-        'test_data_dir': PATH + 'test_log.csv',
-        'ckpt_dir': PATH + 'ckpt_dir/',
-        'model_name': 'wdl',
-        'batch_size': 1024,
-        'epoches_per_eval': 1,
-        'learning_rate': 0.01,
-        'optimizer': 'adam',
-        'shuffle': False,
-        'embedding_dim': 8,
-        'deep_layer_nerouns': [512, 512, 512],
-        'columns': columns,
-        'feat_field_size': feat_field_size,
-        'wide_feat_columns': wide_feat_columns,
-        'wide_field_size': wide_field_size
+    feat_columns = build_ali_display_ads_feat_columns(emb_dim=8)
+    MODEL_FN_MAP = {
+        'wdl':      wdl_estimator,
+        'dcn':      dcn_model_fn,
+        'autoint':  autoint_model_fn,
+        'xdeepfm':  xdeepfm_model_fn,
+        'deepfm':   deepfm_model_fn,
+        'resnet':   res_model_fn,
+        'pnn':      pnn_model_fn,
+        'fibinet':  fibinet_model_fn,
+        'afm':      afm_model_fn,
     }
-    print('this process will train a: ' + params_config['model_name'] + ' model...')
-    shutil.rmtree(params_config['ckpt_dir'], ignore_errors=True)
-    model = build_estimator(params_config['model_name'], params_config=params_config)
+    ARGS = {
+        # data/ckpt dir config
+        'train_data_dir':           ALI_DISPLAY_ADS_CONFIG['data_path'] + 'train_log_sample.csv',
+        'test_data_dir':            ALI_DISPLAY_ADS_CONFIG['data_path'] + 'test_log_sample.csv',
+        'load_tf_records_data':     False,
+        'ckpt_dir':                 ALI_DISPLAY_ADS_CONFIG['data_path'] + 'ckpt_dir/',
+        # traning process config
+        'shuffle':                  True,
+        'model_name':               'wdl',
+        'optimizer':                'adam',
+        'train_epoches_num':        1,
+        'batch_size':               16,
+        'epoches_per_eval':         2,
+        'learning_rate':            0.01,
+        'deep_layer_nerouns':       [256, 128, 64],
+        'embedding_dim':            feat_columns['embedding_dim'],
+        'deep_columns':             feat_columns['deep_columns'],
+        'deep_fields_size':         feat_columns['deep_fields_size'],
+        'wide_columns':             feat_columns['wide_columns'],
+        'wide_fields_size':         feat_columns['wide_fields_size'],
+        'model_fn_map':             MODEL_FN_MAP,
+        'fibinet':                  {'pooling': 'max', 'reduction_ratio': 2}
+    }
+    print('this process will train a: ' + ARGS['model_name'] + ' model...')
+    shutil.rmtree(ARGS['ckpt_dir'], ignore_errors=True)
+    model = build_estimator(ARGS['ckpt_dir'], ARGS['model_name'], params_config=ARGS)
     model.train(
-        input_fn=lambda: ali_display_ads_input_fn_from_csv_file(
-            data_file=params_config['train_data_dir'],
-            num_epochs=params_config['epoches_per_eval'],
-            shuffle=True if params_config['shuffle']==True else False,
-            batch_size=params_config['batch_size']
-        )
+        input_fn=lambda: ali_display_ads_input_fn_from_csv_file(data_file=ARGS['train_data_dir'], num_epochs=ARGS['train_epoches_num'], shuffle=True, batch_size=ARGS['batch_size'])
     )
     results = model.evaluate(
-        input_fn=lambda: ali_display_ads_input_fn_from_csv_file(
-            data_file=params_config['test_data_dir'],
-            num_epochs=1,
-            shuffle=False,
-            batch_size=params_config['batch_size']
+        input_fn=lambda: ali_display_ads_input_fn_from_csv_file(data_file=ARGS['test_data_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size']
         )
     )
-    for key in sorted(results):
-        print('%s: %s' % (key, results[key]))
+    predictions = model.predict(
+        input_fn=lambda: ali_display_ads_input_fn_from_csv_file(data_file=ARGS['test_data_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
+    )
+    # for x in predictions:
+    #     print(x['probabilities'][0])
+    #     print(x['label'][0])
+
 
 
 if __name__ == '__main__':
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
     tf.compat.v1.set_random_seed(1)
     train_ali_display_ads_data()
-

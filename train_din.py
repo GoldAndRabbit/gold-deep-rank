@@ -1,6 +1,6 @@
 import shutil
 import tensorflow as tf
-from utils.ama_ele_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
+from feat_config.ama_ele_feat_config import SEQ_COLUMNS, SEQ_COLUMNS_DEFAULTS
 from deep_seq_models.din import din_model_fn
 
 def build_estimator(model_dir, model_type):
