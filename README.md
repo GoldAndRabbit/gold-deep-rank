@@ -9,7 +9,7 @@
 * **Memorization & Generalization**. 记忆性和泛化性是推荐系统重要的两类能力, 这两类目标通过Wide & Deep Learning结构同时学得, wide part采用FTRL实现, 目的是使得对id类特征具有memorization(记忆性); DNN结构具有generalization的特性(泛化性); 
 * 整理实现. 封装在gold-deep-rank这个项目中, repo地址: https://github.com/GoldAndRabbit/gold-deep-rank 主要参考作者源码以及开源库.
 
-> ## Deep CTR Framewor 
+> ## Deep CTR Framework 
 <div align="center">
 <img alt="" src="https://z3.ax1x.com/2021/04/10/cdTUkF.png" />
 </div>
