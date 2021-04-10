@@ -130,23 +130,43 @@ def train_census_data():
     model = build_estimator(ARGS['ckpt_dir'], ARGS['model_name'], params_config=ARGS)
     if not ARGS.get('load_tf_records_data'):
         model.train(
-            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['train_data_dir'], num_epochs=ARGS['train_epoches_num'], shuffle=True if ARGS['shuffle']==True else False, batch_size=ARGS['batch_size'])
+            input_fn=lambda: census_input_fn_from_csv_file(
+                data_file=ARGS['train_data_dir'],
+                num_epochs=ARGS['train_epoches_num'],
+                shuffle=True if ARGS['shuffle']==True else False,
+                batch_size=ARGS['batch_size']
+            )
         )
         results = model.evaluate(
-            input_fn=lambda: census_input_fn_from_csv_file(data_file=ARGS['test_data_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
+            input_fn=lambda: census_input_fn_from_csv_file(
+                data_file=ARGS['test_data_dir'],
+                num_epochs=1,
+                shuffle=False,
+                batch_size=ARGS['batch_size']
+            )
         )
         for key in sorted(results):
             print('%s: %s' % (key, results[key]))
     else:
         model.train(
-            input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['train_data_tfrecords_dir'], num_epochs=ARGS['train_epoches'], shuffle=True, batch_size=ARGS['batch_size'])
+            input_fn=lambda: census_input_fn_from_tfrecords(
+                data_file=ARGS['train_data_tfrecords_dir'],
+                num_epochs=ARGS['train_epoches'],
+                shuffle=True,
+                batch_size=ARGS['batch_size']
+            )
         )
         results = model.evaluate(
-            input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size']
+            input_fn=lambda: census_input_fn_from_tfrecords(
+                data_file=ARGS['test_data_tfrecords_dir'],
+                num_epochs=1,
+                shuffle=False,
+                batch_size=ARGS['batch_size']
             )
         )
         for key in sorted(results):
             print('%s: %s' % (key,results[key]))
+
     predictions = model.predict(
         input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
     )

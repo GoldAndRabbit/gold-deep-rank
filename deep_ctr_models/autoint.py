@@ -9,7 +9,7 @@ def autoint_model_fn(features, labels, mode, params):
         inputs_shape = inputs.get_shape()
         params_shape = inputs_shape[-1:]
         mean, variance = tf.nn.moments(inputs, [-1], keep_dims=True)
-        beta = tf.Variable(tf.zeros(params_shape))
+        beta  = tf.Variable(tf.zeros(params_shape))
         gamma = tf.Variable(tf.ones(params_shape))
         normalized = (inputs - mean) / ((variance + epsilon) ** 0.5)
         outputs = gamma * normalized + beta
@@ -113,10 +113,10 @@ def autoint_model_fn(features, labels, mode, params):
         auc = tf.metrics.auc(labels, predictions)
         my_metrics = {
             'accuracy': tf.metrics.accuracy(labels, predictions),
-            'auc': tf.metrics.auc(labels,predictions)
+            'auc'     : tf.metrics.auc(labels,      predictions),
         }
         tf.summary.scalar('accuracy', accuracy[1])
-        tf.summary.scalar('auc', auc[1])
+        tf.summary.scalar('auc',      auc[1])
         return tf.estimator.EstimatorSpec(mode, loss=loss, eval_metric_ops=my_metrics)
 
 

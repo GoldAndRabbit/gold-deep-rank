@@ -1,31 +1,99 @@
-## gold-deep-rank 
+> ## gold-deep-rank 
 * a well-organized experimental code for Ads/Recsys Ranking process implemented by Tensorflow, adopting tf.estimator api.
 * support for flexible parameter customization, suitble for industrial development.
 * tensorflow version: 1.14
 
-## feature interaction net
+> ## Why Deep CTR model? 
+* **Auto Feature Interaction**. 深度学习用于CTR预估问题, 主要优势是通过网络设计达到自动学习特征交互Feature Interaction的目的. 本文中涉及到的模型均是解决Feature Interaction的不同网络设计.
+* **Better Sparse ids presentation Support**. 相比GBDT模型, DNN对稀疏id类特征有更好的表示学习能力. 业务需求中往往存在海量且稀疏id类特征, 通过embedding支持对海量id类特征具备较强的表示学习能力.
+* **Memorization & Generalization**. 记忆性和泛化性是推荐系统重要的两类能力, 这两类目标通过Wide & Deep Learning结构同时学得, wide part采用FTRL实现, 目的是使得对id类特征具有memorization(记忆性); DNN结构具有generalization的特性(泛化性); 
+* 整理实现. 封装在gold-deep-rank这个项目中, repo地址: https://github.com/GoldAndRabbit/gold-deep-rank 主要参考作者源码以及开源库.
 
-|Model|Paper|Corporation / Institute.|
-|----| ---- |----|
-|DeepFM|DeepFM: A Factorization-Machine based Neural Network for CTR Predict.|Huawei|
-|DCN|Deep & Cross Network for Ad Click Predictions.|Google|
-|xDeepFM|xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems.|Microsoft & BUPT & USTC|
-|AutoInt|Automatic Feature Interaction Learning via Self-Attentive Neural Networks.|PKU & UCLA|
-|DIN|Deep Interest Network for Click-Through Rate Prediction.|Alibaba|
-|AFM|Attentional Factorization Machines - Learning the Weight of Feature Interactions via Attention Networks.|ZJU & NUS|
-|WDL|Wide & deep learning for recommender systems.|Google|
-|PNN|Product-based neural networks for user response prediction.|SJTU & UCL|
-|FiBiNET|Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction|Sina Weibo|
-|Deep Cross|Web-Scale Modeling without Manually Crafted Combinatorial Features.|Microsoft|
+> ## Deep CTR Framewor 
+<div align="center">
+<img alt="" src="https://z3.ax1x.com/2021/04/10/cdTUkF.png" />
+</div>
 
-## multi-task learning net 
+> ## Wide & Deep Learning
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMbxQU.png" />
+</div>
 
-|Model|Paper|Author|
-|----| ---- |----|
-|ESMM|Entire Space Multi-Task Model: An Eﬀective Approach for Estimating Post-Click Conversion Rate.|Alibaba|
-|MMOE|Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts.|Google|
+* Google提出将线性层和DNN同时优化的一般结构, 在此基础上对DNN部分做优化/定制.  
+* 泛化性和记忆性是推荐系统的重要的两类基础能力.
 
-## dataset
+> ## DeepFM
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMqKwd.png" width="400"/>
+</div>
+
+<center>   
+
+![deepfm](http://latex.codecogs.com/png.latex?y_{fm}=w_{0}+\sum_{i=1}^{n}w_{i}x_{i}+\sum_{i=1}^{n}\sum_{j=i+1}^{n}<v_{i}\odot{v_{j}}>x_{i}{x_{j}})
+</center>
+
+* fm是二阶特征交互的基础方法, 可作为一般Baseline. 
+* fm复杂度降低实现推导，将复杂度从O(kn^2)降低到O(kn), 简单记忆方法: sum_square-square_sum, 不要忘了前面还有1/2常系数.
+
+
+<div align="center">
+<img src="https://s3.ax1x.com/2020/12/28/r7PVKS.png" width="400" />
+</div>
+
+> ## PNN: Inner/Outer product
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMqJl8.png"  width="400"/>
+</div>
+
+* 向量的内积和外积可以定义两种vec的交叉方式, 很朴素的feature interaction思想.
+
+> ## DCN: Cross Network
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMbzyF.png"  width="400"/>
+</div>
+
+* 思想是实现**多项式形式**的feature interaction，其实和一般意义上的特征交叉有所区别.
+<center>
+
+![dcn](http://latex.codecogs.com/png.latex?x_{l+1}=x_{0}x_{l}^{T}x_{l}+b_{l}+x_{l})
+</center>
+
+> ## xDeepFM: CIN
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMqFF1.png" />
+</div>
+
+* 引入vector-wise feature交叉, 而不是bit-wise.
+* CIN的结构不建议理解公式(形式化复杂), 结合图和源码看比较容易理解.
+
+
+> ## AFM: FM based attention
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMqPoR.png"  width="666"/>
+</div>
+
+* 在原有deepfm基础上, 加一层attention layer
+<center>
+
+![afm](http://latex.codecogs.com/png.latex?y_{fm}^=w_{0}+\sum_{i=1}^{n}w_{i}x_{i}+\mathbf{p^{T}}\alpha_{ij}\sum_{i=1}^{n}\sum_{j=i+1}^{n}<v_{i}\odot{v_{j}}>x_{i}{x_{j}})
+</center>
+
+> ## AutoInt: Multi-head attention
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMxVSI.png"  width="400"/>
+</div>
+
+* 引入multi-head self attention学习feature interaction, 关于multi-head self attention查看transformer原理
+
+
+> ## FiBiNet: SENET & Bi-linear interaction
+<div align="center">
+<img alt="" src="https://s3.ax1x.com/2020/12/15/rMqY6S.png"  width="666"/>
+</div>
+
+* 引入SENET学习feature interaction
+
+> ## Dataset Description
 |Dataset|Description|
 |----|----|
 |Census Incomes|Extraction was done by Barry Becker from the 1994 Census database. Prediction task is to determine whether a person makes over 50K a year.|
@@ -33,8 +101,7 @@
 |Criteo|To be updated...|
 |Avazu|To be updated...|
 |Tencent Social Ads|To be updated...|
-|JD|To be updated...|
 
-## evaluation
+> ## Evaluation
 To be updated...
 
