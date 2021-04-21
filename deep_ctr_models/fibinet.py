@@ -1,8 +1,6 @@
-"""
-    @Reference  FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction[J].
-"""
 import random
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def fibinet_model_fn(features, labels, mode, params):

@@ -1,7 +1,5 @@
-"""
-    @Reference  Wide & deep learning for recommender systems[C].
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def wdl_estimator(params, config):

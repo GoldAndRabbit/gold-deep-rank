@@ -1,7 +1,6 @@
-"""
-    @Reference  Deepfm: a factorization-machine based neural network for ctr prediction[J].
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 
 
 def deepfm_model_fn(features, labels, mode, params):

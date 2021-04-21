@@ -1,7 +1,6 @@
-"""
-    @Reference  Deep Residual Learning for Image Recognition.
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 
 
 def res_model_fn(features, labels, mode, params):

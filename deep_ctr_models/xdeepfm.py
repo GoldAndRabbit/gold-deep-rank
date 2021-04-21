@@ -1,7 +1,5 @@
-"""
-    @Reference  xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J].
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def xdeepfm_model_fn(features, labels, mode, params):

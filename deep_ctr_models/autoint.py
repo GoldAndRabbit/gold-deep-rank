@@ -1,7 +1,5 @@
-"""
-    @Reference  AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks[J]
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def autoint_model_fn(features, labels, mode, params):

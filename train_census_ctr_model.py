@@ -1,6 +1,7 @@
 import os
 import shutil
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from feat_config.census_ctr_feat_config import CENSUS_CONFIG, build_census_feat_columns
 from deep_ctr_models.wdl     import wdl_estimator
 from deep_ctr_models.dcn     import dcn_model_fn
@@ -102,28 +103,29 @@ def train_census_data():
     }
     ARGS = {
         # data/ckpt dir config
-        'train_data_dir':           'data/census/adult.data',
-        'test_data_dir':            'data/census/adult.test',
+        'train_data_dir'          : 'data/census/train.csv',
+        'valid_data_dir'          : 'data/census/eval.csv',
+        'test_data_dir'           : 'data/census/test.csv',
         'train_data_tfrecords_dir': 'data/census/census_adult.tfrecords',
-        'test_data_tfrecords_dir':  'data/census/census_test.tfrecords',
-        'load_tf_records_data':     False,
-        'ckpt_dir':                 CENSUS_PATH + 'ckpt_dir/',
+        'test_data_tfrecords_dir' : 'data/census/census_test.tfrecords',
+        'load_tf_records_data'    :  False,
+        'ckpt_dir'                :  CENSUS_PATH + 'ckpt_dir/',
         # traning process config
-        'shuffle':                  True,
-        'model_name':               'wdl',
-        'optimizer':                'adam',
-        'train_epoches_num':        1,
-        'batch_size':               16,
-        'epoches_per_eval':         2,
-        'learning_rate':            0.01,
-        'deep_layer_nerouns':       [256, 128, 64],
-        'embedding_dim':            feat_columns['embedding_dim'],
-        'deep_columns':             feat_columns['deep_columns'],
-        'deep_fields_size':         feat_columns['deep_fields_size'],
-        'wide_columns':             feat_columns['wide_columns'],
-        'wide_fields_size':         feat_columns['wide_fields_size'],
-        'model_fn_map':             MODEL_FN_MAP,
-        'fibinet':                  {'pooling': 'max', 'reduction_ratio': 2}
+        'shuffle'                 : True,
+        'model_name'              : 'autoint',
+        'optimizer'               : 'adam',
+        'train_epoches_num'       : 1,
+        'batch_size'              : 16,
+        'epoches_per_eval'        : 2,
+        'learning_rate'           : 0.01,
+        'deep_layer_nerouns'      : [256, 128, 64],
+        'embedding_dim'           : feat_columns['embedding_dim'],
+        'deep_columns'            : feat_columns['deep_columns'],
+        'deep_fields_size'        : feat_columns['deep_fields_size'],
+        'wide_columns'            : feat_columns['wide_columns'],
+        'wide_fields_size'        : feat_columns['wide_fields_size'],
+        'model_fn_map'            : MODEL_FN_MAP,
+        'fibinet'                 : {'pooling': 'max', 'reduction_ratio': 2}
     }
     print('this process will train a: ' + ARGS['model_name'] + ' model...')
     shutil.rmtree(ARGS['ckpt_dir'], ignore_errors=True)
@@ -139,7 +141,7 @@ def train_census_data():
         )
         results = model.evaluate(
             input_fn=lambda: census_input_fn_from_csv_file(
-                data_file=ARGS['test_data_dir'],
+                data_file=ARGS['valid_data_dir'],
                 num_epochs=1,
                 shuffle=False,
                 batch_size=ARGS['batch_size']
@@ -147,6 +149,18 @@ def train_census_data():
         )
         for key in sorted(results):
             print('%s: %s' % (key, results[key]))
+
+        pred_dict = model.predict(
+            input_fn=lambda: census_input_fn_from_csv_file(
+                data_file=ARGS['test_data_dir'],
+                num_epochs=1,
+                shuffle=False,
+                batch_size=ARGS['batch_size']
+            )
+        )
+        for pred_res in pred_dict:
+            print(pred_res['label'][0],pred_res['probabilities'][0])
+
     else:
         model.train(
             input_fn=lambda: census_input_fn_from_tfrecords(
@@ -164,12 +178,12 @@ def train_census_data():
                 batch_size=ARGS['batch_size']
             )
         )
-        for key in sorted(results):
-            print('%s: %s' % (key,results[key]))
+        # for key in sorted(results):
+        #     print('%s: %s' % (key,results[key]))
 
-    predictions = model.predict(
-        input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
-    )
+    # predictions = model.predict(
+    #     input_fn=lambda: census_input_fn_from_tfrecords(data_file=ARGS['test_data_tfrecords_dir'], num_epochs=1, shuffle=False, batch_size=ARGS['batch_size'])
+    # )
     # for x in predictions:
     #     print(x['probabilities'][0])
     #     print(x['label'][0]))
@@ -177,7 +191,7 @@ def train_census_data():
 
 
 if __name__ == '__main__':
-    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
-    tf.compat.v1.set_random_seed(1)
+    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.set_random_seed(1)
     train_census_data()
 

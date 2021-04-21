@@ -1,8 +1,7 @@
-"""
-    @Reference  Attentional factorization machines: Learning the weight of feature interactions via attention networks[J].
-"""
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 
 
 def afm_model_fn(features, labels, mode, params):

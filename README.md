@@ -1,7 +1,7 @@
 > ## gold-deep-rank 
-* a well-organized experimental code for Ads/Recsys Ranking process implemented by Tensorflow, adopting tf.estimator api.
-* support for flexible parameter customization, suitble for industrial development.
-* tensorflow version: 1.14
+* A well-organized experimental code for Ads/Recsys Ranking process implemented by Tensorflow, adopting tf.estimator api.
+* Support for flexible parameter customization, suitble for industrial development.
+* Tensorflow version compatibility: support tf 1.14 and tf 2.4.1.
 
 > ## Why Deep CTR model? 
 * **Auto Feature Interaction**. 深度学习用于CTR预估问题, 主要优势是通过网络设计达到自动学习特征交互Feature Interaction的目的. 本文中涉及到的模型均是解决Feature Interaction的不同网络设计.
@@ -9,7 +9,7 @@
 * **Memorization & Generalization**. 记忆性和泛化性是推荐系统重要的两类能力, 这两类目标通过Wide & Deep Learning结构同时学得, wide part采用FTRL实现, 目的是使得对id类特征具有memorization(记忆性); DNN结构具有generalization的特性(泛化性); 
 * 整理实现. 封装在gold-deep-rank这个项目中, repo地址: https://github.com/GoldAndRabbit/gold-deep-rank 主要参考作者源码以及开源库.
 
-> ## Deep CTR Framework 
+> ## Deep CTR framework 
 <div align="center">
 <img alt="" src="https://z3.ax1x.com/2021/04/10/cdTUkF.png" />
 </div>
@@ -104,4 +104,8 @@
 
 > ## Evaluation
 To be updated...
+
+> ## Update Log
+* 20210421: Support tf 2.4.1 version.
+* 20210410: Fix census csv data read bug. Update README.md: add deep interaction docs.
 

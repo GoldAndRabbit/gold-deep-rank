@@ -1,8 +1,5 @@
-"""
-    @Reference  Deep & cross network for ad click predictions[C].
-"""
-import tensorflow as tf
-
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 def dcn_model_fn(features, labels, mode, params):
     deep_columns     = params['deep_columns']

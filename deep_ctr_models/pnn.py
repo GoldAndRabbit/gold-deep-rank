@@ -1,7 +1,5 @@
-"""
-    @Reference  Product-based neural networks for user response prediction[C].
-"""
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def pnn_model_fn(features, labels, mode, params):
